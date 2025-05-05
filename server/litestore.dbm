@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CAUTION: Do not modify this file unless you know what you are doing.
+ Unexpected results may occur if the code is changed deliberately.
+-->
+<dbmodel pgmodeler-ver="1.2.0-beta1" use-changelog="false" max-obj-count="4"
+	 gen-disabled-objs-code="false" show-sys-schemas-rects="true"
+	 last-position="0,380" last-zoom="0.9" scene-rect="0,-81.8,1570.8,1158.6"
+	 default-schema="public" default-owner="postgres"
+	 layers="Default layer"
+	 active-layers="0"
+	 layer-name-colors="#000000"
+	 layer-rect-colors="#b4b4b4"
+	 show-layer-names="false" show-layer-rects="false">
+<role name="litestore"
+ login="true"
+ connlimit="1"
+ password="cEgSqBYo9XakVSeh">
+</role>
+
+<database name="litestore" is-template="false" allow-conns="true">
+	<role name="litestore"/>
+</database>
+
+<schema name="public" layers="0" fill-color="#e1e1e1" name-color="#000000" sql-disabled="true">
+</schema>
+
+<table name="users" layers="0" collapse-mode="2" max-obj-count="9" z-value="0">
+	<schema name="public"/>
+	<role name="litestore"/>
+	<tablespace name="pg_default"/>
+	<position x="240" y="260"/>
+	<column name="id" not-null="true">
+		<type name="serial" length="0"/>
+	</column>
+	<column name="username" not-null="true">
+		<type name="varchar" length="255"/>
+	</column>
+	<column name="email" not-null="true">
+		<type name="varchar" length="255"/>
+	</column>
+	<column name="password" not-null="true">
+		<type name="varchar" length="255"/>
+	</column>
+	<column name="created_at" not-null="true" default-value="CURRENT_TIMESTAMP">
+		<type name="timestamptz" length="0"/>
+	</column>
+	<column name="last_login">
+		<type name="timestamptz" length="0"/>
+	</column>
+	<column name="storage_quota" default-value="null">
+		<type name="bigint" length="0"/>
+		<comment> <![CDATA[Storage quota a user has (in bytes), Default is unlimited.]]> </comment>
+	</column>
+	<column name="storage_used" not-null="true" default-value="0">
+		<type name="bigint" length="0"/>
+		<comment> <![CDATA[Storage used in bytes]]> </comment>
+	</column>
+	<constraint name="users_pk" type="pk-constr" table="public.users">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="users_info" type="uq-constr" table="public.users">
+		<columns names="username,email" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="files" layers="0" collapse-mode="2" max-obj-count="10" z-value="0">
+	<schema name="public"/>
+	<role name="litestore"/>
+	<position x="1000" y="160"/>
+	<column name="id" not-null="true">
+		<type name="serial" length="0"/>
+	</column>
+	<column name="filename" not-null="true">
+		<type name="varchar" length="255"/>
+	</column>
+	<column name="filepath" not-null="true">
+		<type name="varchar" length="1024"/>
+	</column>
+	<column name="is_folder" not-null="true" default-value="false">
+		<type name="bool" length="0"/>
+	</column>
+	<column name="parent_folder">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="created" not-null="true" default-value="current_timestamp">
+		<type name="timestamptz" length="0"/>
+	</column>
+	<column name="updated" default-value="current_timestamp">
+		<type name="timestamptz" length="0"/>
+	</column>
+	<column name="trashed" not-null="true" default-value="false">
+		<type name="bool" length="0"/>
+		<comment> <![CDATA[Whether the file is in the trash or not]]> </comment>
+	</column>
+	<constraint name="files_pk" type="pk-constr" table="public.files">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+
+	<customidxs object-type="column">
+		<object name="id_users" index="8"/>
+	</customidxs>
+	<customidxs object-type="constraint">
+		<object name="users_fk" index="1"/>
+	</customidxs></table>
+
+<relationship name="users_has_many_files" type="rel1n" layers="0"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 fk-idx-pattern="{st}_idx"
+	 custom-color="#5df5f3"
+	 src-table="public.users"
+	 dst-table="public.files"
+	 src-required="false" dst-required="false"
+	del-action="CASCADE"/>
+
+<table name="file_links" layers="0" collapse-mode="2" max-obj-count="9" z-value="0">
+	<schema name="public"/>
+	<role name="litestore"/>
+	<position x="820" y="640"/>
+	<column name="id" not-null="true" default-value="gen_random_uuid()">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="created_by">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="created_at" default-value="current_timestamp">
+		<type name="timestamptz" length="0"/>
+	</column>
+	<column name="expires_at">
+		<type name="timestamptz" length="0"/>
+	</column>
+	<column name="password">
+		<type name="varchar" length="255"/>
+		<comment> <![CDATA[An optional password hash of the file]]> </comment>
+	</column>
+	<column name="download_limit">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="download_count" not-null="true" default-value="0">
+		<type name="integer" length="0"/>
+	</column>
+	<constraint name="file_links_pk" type="pk-constr" table="public.file_links">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+
+	<customidxs object-type="column">
+		<object name="id_files" index="1"/>
+	</customidxs>
+	<customidxs object-type="constraint">
+		<object name="file_links_uq" index="2"/>
+		<object name="files_fk" index="1"/>
+	</customidxs></table>
+
+<relationship name="file_links_has_one_files" type="rel11" layers="0"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 fk-idx-pattern="{st}_idx"
+	 custom-color="#c09fb8"
+	 src-table="public.files"
+	 dst-table="public.file_links"
+	 src-required="false" dst-required="false"
+	del-action="CASCADE"/>
+
+<constraint name="parent_fk" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="CASCADE" ref-table="public.files" table="public.files">
+	<columns names="parent_folder" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="link_owner" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="CASCADE" ref-table="public.users" table="public.file_links">
+	<columns names="created_by" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<relationship name="rel_files_files" type="relfk" layers="0"
+	 src-table="public.files"
+	 dst-table="public.files" reference-fk="parent_fk"
+	 src-required="false" dst-required="false">
+	<line>
+		<position x="1303.96" y="267.041"/>
+	<position x="1303.96" y="127"/>
+	<position x="1180.64" y="127"/>
+	</line>
+	<label ref-type="name-label">
+		<position x="0" y="0"/>
+	</label>
+</relationship>
+
+<relationship name="rel_file_links_users" type="relfk" layers="0"
+	 src-table="public.file_links"
+	 dst-table="public.users" reference-fk="link_owner"
+	 src-required="false" dst-required="false"/>
+
+</dbmodel>
