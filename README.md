@@ -17,7 +17,10 @@ To host litestore, you must have the following:
 
 -   a web server (lighttpd, apache http, nginx, etc.)
 -   an S3-compatible object storage (AWS S3, Google Cloud Storage, MinIO, Garage, etc.)
--   PostgreSQL 17
+-   PostgreSQL 17\*
+
+\*Should be compatible with older PostgreSQL versions that are still supported, but it isn't recommended
+as litestore is tested against the latest PostgreSQL version.
 
 ## License
 

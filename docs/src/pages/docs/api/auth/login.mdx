@@ -1,0 +1,85 @@
+---
+layout: "@/layouts/APILayout.astro"
+---
+
+import Badge from "@/components/Badge.astro";
+import Tabs from "@/components/Tabs.astro";
+import Tab from "@/components/Tab.astro";
+
+<h1>
+	<Badge variant="post">POST</Badge> /api/auth/login
+</h1>
+
+## Body
+
+This route requires a JSON body with the following parameters.
+
+| Name     | Type     | Required |
+| -------- | -------- | -------- |
+| username | `string` | Yes      |
+| password | `string` | Yes      |
+
+## Response
+
+This route can return HTTP code 200 (OK), 400 (Bad Request),
+401 (Unauthorized),
+405 (Method Not Allowed), 500 (Internal Server Error)
+
+<Tabs>
+	<Tab name="200">
+```json
+{
+    "status": 200,
+    "dog": "https://http.dog/200",
+    "token": "(jwt token)"
+}
+```
+    </Tab>
+    <Tab name="400">
+```jsonc
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Required fields not found within request body",
+    "issues": [ /* ... */ ]
+}
+```
+    </Tab>
+    <Tab name="401">
+```jsonc
+// Multiple reasons possible, including:
+{
+    "status": 401,
+    "message": "Username not found"
+}
+{
+    "status": 401,
+    "message": "Incorrect password"
+}
+```
+    </Tab>
+    <Tab name="405">
+```json
+{
+    "status": 405,
+    "message": "HTTP method not allowed",
+    "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+    <Tab name="500">
+```jsonc
+// Multiple reasons possible, including:
+{
+    "status": 500,
+    "dog": "https://http.dog/500",
+    "message": "An error occurred while searching for the user"
+}
+{
+    "status": 500,
+    "dog": "https://http.dog/500",
+    "message": "An error occurred while verifying the password."
+}
+```
+    </Tab>
+</Tabs>

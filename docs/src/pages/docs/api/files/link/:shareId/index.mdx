@@ -1,0 +1,201 @@
+---
+layout: "@/layouts/APILayout.astro"
+---
+
+import Badge from "@/components/Badge.astro";
+import Tabs from "@/components/Tabs.astro";
+import Tab from "@/components/Tab.astro";
+
+<h1>
+	<Badge variant="get">GET</Badge> /api/files/:shareId
+</h1>
+
+Fetches the information of the public link
+
+## Response
+
+This route can return HTTP code 200 (OK), 400 (Bad Request),
+404 (Not Found), and 405 (Method Not Allowed)
+
+<Tabs>
+	<Tab name="200">
+```json
+{
+    "status": 200,
+    "dog": "https://http.dog/200",
+    "filename": "abc.jpg",
+    "passwordProtected": false,
+    "downloadCount": 0
+}
+```
+    </Tab>
+    <Tab name="400">
+```json
+{
+    "status": 400,
+    "message": "Invalid URL parameter",
+    "dog": "https://http.dog/400",
+    "issues": [ /* Cause of the invalid UUID */ ]
+}
+```
+    </Tab>
+    <Tab name="404">
+```json
+{
+    "status": 404,
+    "dog": "https://http.dog/404",
+    "message": "Requested resource not found",
+}
+```
+    </Tab>
+    <Tab name="405">
+```json
+{
+    "status": 405,
+    "message": "HTTP method not allowed",
+    "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+</Tabs>
+
+<h1>
+	<Badge variant="patch">PATCH</Badge> /api/files/:shareId
+</h1>
+
+Modifies the file sharing link.
+
+If a person attempts to patch a link that is not their own, an OK response
+will be sent but no actual update is done.
+
+## Headers
+
+This route requires the `Authorization` header with the JWT.
+
+```
+Authorization: Bearer (token)
+```
+
+## Body
+
+This route requires a JSON body with the following parameters.
+
+| Name          | Type            | Required | Description                                                   |
+| ------------- | --------------- | -------- | ------------------------------------------------------------- |
+| expiresAt     | `string (Date)` | No       | The date and time of link expiration in ISO 8601 format       |
+| password      | `string`        | No       | A password to protect the file link                           |
+| downloadLimit | `number`        | No       | How many times could the file be downloaded through this link |
+
+## Response
+
+This route can return HTTP code 200 (OK), 400 (Bad Request),
+401 (Unauthorized), 405 (Method Not Allowed), and 500 (Internal Server Error)
+
+<Tabs>
+	<Tab name="200">
+```json
+{
+    "status": 200,
+    "dog": "https://http.dog/200"
+}
+```
+    </Tab>
+    <Tab name="400">
+```jsonc
+// Multiple reasons possible, including:
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Malformed JSON body"
+}
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Required fields not found within request body",
+    "issues": [ /* ... */ ]
+}
+```
+    </Tab>
+    <Tab name="401">
+```json
+{
+    "status": 401,
+    "dog": "https://http.dog/401",
+    "message": "Invalid (or a lack of) JWT token",
+}
+```
+    </Tab>
+    <Tab name="405">
+```json
+{
+    "status": 405,
+    "message": "HTTP method not allowed",
+    "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+    <Tab name="500">
+```json
+{
+    "status": 500,
+    "dog": "https://http.dog/500",
+    "message": "An error occurred while updating link settings"
+}
+```
+    </Tab>
+</Tabs>
+
+<h1>
+	<Badge variant="delete">DELETE</Badge> /api/files/:shareId
+</h1>
+
+## Headers
+
+This route requires the `Authorization` header with the JWT.
+
+```
+Authorization: Bearer (token)
+```
+
+## Response
+
+This route can return HTTP code 201 (Created), 401 (Unauthorized),
+405 (Method Not Allowed), and 500 (Internal Server Error)
+
+<Tabs>
+	<Tab name="200">
+```json
+{
+    "status": 200,
+    "dog": "https://http.dog/200"
+}
+```
+    </Tab>
+    <Tab name="401">
+```json
+{
+    "status": 401,
+    "dog": "https://http.dog/401",
+    "message": "Invalid (or a lack of) JWT token",
+}
+```
+    </Tab>
+    <Tab name="405">
+```json
+{
+    "status": 405,
+    "message": "HTTP method not allowed",
+    "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+    <Tab name="500">
+```json
+{
+    "status": 500,
+    "dog": "https://http.dog/500",
+    "message": "An error occurred while deleting the file link"
+}
+```
+    </Tab>
+</Tabs>

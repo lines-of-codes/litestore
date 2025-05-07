@@ -1,0 +1,93 @@
+---
+layout: "@/layouts/APILayout.astro"
+---
+
+import Badge from "@/components/Badge.astro";
+import Tabs from "@/components/Tabs.astro";
+import Tab from "@/components/Tab.astro";
+
+<h1>
+	<Badge variant="post">POST</Badge> /api/files/upload
+</h1>
+
+Create S3 presigned link(s) for the upload request.
+Will create a multipart upload (and return multiple links)
+when the file size is over 16 MiB.
+
+A <Badge variant="put">PUT</Badge> request can simply be sent to the
+returned link(s) to upload the file. Read more about [presigned URLs
+on S3's documentation.](https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html)
+
+## Headers
+
+This route requires the `Authorization` header with the JWT.
+
+```
+Authorization: Bearer (token)
+```
+
+## Body
+
+This route requires a JSON body with the following parameters.
+
+| Name | Type     | Required | Description                                         |
+| ---- | -------- | -------- | --------------------------------------------------- |
+| path | `string` | Yes      | The path of the file, relative to the user's folder |
+| size | `string` | Yes      | The size of the file (in bytes)                     |
+
+## Response
+
+This route can return HTTP code 201 (Created), 400 (Bad Request),
+401 (Unauthorized), and 405 (Method Not Allowed)
+
+<Tabs>
+	<Tab name="201">
+```json
+{
+    "status": 201,
+    "dog": "https://http.dog/201",
+    "links": [ /* Link(s) for the upload part(s) */ ],
+    "sizes": [ /* How large each parts should be (bytes) */ ]
+}
+```
+    </Tab>
+    <Tab name="400">
+```jsonc
+// Multiple reasons possible, including:
+{
+    "status": 400,
+    "message": "Request body required but not found",
+    "dog": "https://http.dog/400"
+}
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Malformed JSON body"
+}
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Required fields not found within request body",
+    "issues": [ /* ... */ ]
+}
+```
+    </Tab>
+    <Tab name="401">
+```json
+{
+    "status": 401,
+    "dog": "https://http.dog/401",
+    "message": "Invalid (or a lack of) JWT token",
+}
+```
+    </Tab>
+    <Tab name="405">
+```json
+{
+    "status": 405,
+    "message": "HTTP method not allowed",
+    "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+</Tabs>

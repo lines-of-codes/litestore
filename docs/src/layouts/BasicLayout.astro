@@ -1,0 +1,30 @@
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="litechat/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<link rel="preconnect" href="https://rsms.me/" />
+		<link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+		<title>litestore</title>
+	</head>
+	<body>
+		<slot />
+	</body>
+</html>
+
+<style>
+	html,
+	body {
+		width: 100%;
+		min-height: 100vh;
+	}
+
+	body {
+		margin: 0;
+		background: linear-gradient(to top right, #101020, #202030) no-repeat;
+		background-size: cover;
+		color: #e0e0e0;
+		font-family: Inter, sans-serif;
+	}
+</style>

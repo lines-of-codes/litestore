@@ -1,0 +1,89 @@
+---
+layout: "@/layouts/APILayout.astro"
+---
+
+import Badge from "@/components/Badge.astro";
+import Tabs from "@/components/Tabs.astro";
+import Tab from "@/components/Tab.astro";
+
+<h1>
+	<Badge variant="get">GET</Badge> /api/files/download
+</h1>
+
+Create a S3 presigned link for the download request.
+
+A <Badge variant="get">GET</Badge> request can simply be sent to the
+returned link to download the file. Read more about [presigned URLs
+on S3's documentation.](https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html)
+
+## Headers
+
+This route requires the `Authorization` header with the JWT.
+
+```
+Authorization: Bearer (token)
+```
+
+## Body
+
+This route requires a JSON body with the following parameters.
+
+| Name | Type     | Required | Description                                         |
+| ---- | -------- | -------- | --------------------------------------------------- |
+| path | `string` | Yes      | The path of the file, relative to the user's folder |
+
+## Response
+
+This route can return HTTP code 200 (OK), 400 (Bad Request),
+401 (Unauthorized), and 405 (Method Not Allowed)
+
+<Tabs>
+	<Tab name="200">
+```json
+{
+    "status": 200,
+    "dog": "https://http.dog/200",
+    "url": "link to download the file from S3"
+}
+```
+    </Tab>
+    <Tab name="400">
+```jsonc
+// Multiple reasons possible, including:
+{
+    "status": 400,
+    "message": "Request body required but not found",
+    "dog": "https://http.dog/400"
+}
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Malformed JSON body"
+}
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Required fields not found within request body",
+    "issues": [ /* ... */ ]
+}
+```
+    </Tab>
+    <Tab name="401">
+```json
+{
+    "status": 401,
+    "dog": "https://http.dog/401",
+    "message": "Invalid (or a lack of) JWT token",
+}
+```
+    </Tab>
+    <Tab name="405">
+```json
+{
+    "status": 405,
+    "message": "HTTP method not allowed",
+    "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+</Tabs>

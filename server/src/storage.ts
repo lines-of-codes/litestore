@@ -48,7 +48,7 @@ abstract class Storage {
 	 * Gets the download link. This link may expire.
 	 * @param file Information of a file
 	 */
-	abstract downloadLink(file: FileLocation): string;
+	abstract downloadLink(file: FileLocation | string): string;
 
 	/**
 	 * Will return one upload link for simple (<16MiB)
@@ -57,6 +57,8 @@ abstract class Storage {
 	 * @param file File information
 	 */
 	abstract uploadLink(file: UploadInfo): Promise<UploadInstructions>;
+
+	abstract deleteFile(file: FileLocation): Promise<void>;
 }
 
 /**
@@ -107,15 +109,23 @@ export class S3Driver extends Storage {
 		return objects.contents.map((v) => v.key);
 	}
 
-	downloadLink(file: FileLocation): string {
-		return this.s3.presign(this.getPath(file));
+	downloadLink(file: FileLocation | string): string {
+		let filePath: string = "";
+
+		if (file instanceof Object) {
+			filePath = this.getPath(file);
+		} else {
+			filePath = file;
+		}
+
+		return this.s3.presign(filePath);
 	}
 
 	async uploadLink(file: UploadInfo): Promise<UploadInstructions> {
 		const mib = bytesToMebibytes(file.size);
 		const filePath = this.getPath(file);
 
-		// File can fit in a
+		// File can fit in a single part
 		if (mib < defaultPartSize) {
 			return {
 				links: [
@@ -135,10 +145,7 @@ export class S3Driver extends Storage {
 		const startUploadResponse = await this.s3_aws.send(uploadCommand);
 		const uploadId = startUploadResponse.UploadId;
 
-		const partSize = Math.max(
-			defaultPartSize * mebibyte,
-			file.size / maxParts
-		);
+		const partSize = Math.max(defaultPartSize * mebibyte, file.size / maxParts);
 		const partCount = Math.ceil(file.size / partSize);
 
 		let fileSize = file.size;
@@ -163,7 +170,7 @@ export class S3Driver extends Storage {
 					Key: filePath,
 					UploadId: uploadId,
 					PartNumber: i,
-				})
+				}),
 			);
 
 			presignedUrls.push(presignedUrl);
@@ -177,6 +184,10 @@ export class S3Driver extends Storage {
 
 	async createFolder(dir: FileLocation): Promise<void> {
 		this.s3.write(this.getPath(dir), "");
+	}
+
+	deleteFile(file: FileLocation) {
+		return this.s3.delete(this.getPath(file));
 	}
 }
 

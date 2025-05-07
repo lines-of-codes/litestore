@@ -1,0 +1,78 @@
+---
+layout: "@/layouts/APILayout.astro"
+---
+
+import Badge from "@/components/Badge.astro";
+import Tabs from "@/components/Tabs.astro";
+import Tab from "@/components/Tab.astro";
+
+<h1>
+	<Badge variant="get">GET</Badge> /api/files/link/:shareId/download
+</h1>
+
+Creates a presigned S3 URL to download the file.
+
+## Body
+
+This route can be optionally supplied with JSON data
+
+| Name     | Type     | Required                                   | Description                         |
+| -------- | -------- | ------------------------------------------ | ----------------------------------- |
+| password | `string` | No (Unless the file is password protected) | A password to protect the file link |
+
+## Response
+
+This route can return HTTP code 201 (Created), 400 (Bad Request),
+403 (Forbidden), 404 (Not Found), and 405 (Method Not Allowed)
+
+<Tabs>
+	<Tab name="200">
+```json
+{
+    "status": 201,
+    "dog": "https://http.dog/201",
+    "name": "abc.jpg",
+    "url": "S3 Presigned URL"
+}
+```
+    </Tab>
+    <Tab name="400">
+```jsonc
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    // Note: In this route specifically, It is simply because you have an incorrect type
+    // either your UUID is malformed or your password isn't a string
+    "message": "Required fields not found within request body",
+    "issues": [ /* ... */ ]
+}
+```
+    </Tab>
+    <Tab name="403">
+```json
+{
+    "status": 403,
+    "dog": "https://http.dog/403",
+    "message": "You do not have access to the resource",
+}
+```
+    </Tab>
+    <Tab name="404">
+```json
+{
+    "status": 404,
+    "dog": "https://http.dog/404",
+    "message": "Requested resource not found",
+}
+```
+    </Tab>
+    <Tab name="405">
+```json
+{
+    "status": 405,
+    "message": "HTTP method not allowed",
+    "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+</Tabs>

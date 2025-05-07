@@ -1,0 +1,71 @@
+---
+layout: "@/layouts/APILayout.astro"
+---
+
+import Badge from "@/components/Badge.astro";
+import Tabs from "@/components/Tabs.astro";
+import Tab from "@/components/Tab.astro";
+
+<h1>
+	<Badge variant="post">POST</Badge> /api/auth/signup
+</h1>
+
+## Body
+
+This route requires a JSON body with the following parameters.
+
+| Name     | Type     | Required |
+| -------- | -------- | -------- |
+| email    | `string` | Yes      |
+| username | `string` | Yes      |
+| password | `string` | Yes      |
+
+## Response
+
+This route can return HTTP code 201 (Created), 400 (Bad Request),
+405 (Method Not Allowed), 500 (Internal Server Error)
+
+<Tabs>
+	<Tab name="201">
+```json
+{
+    "status": 201,
+    "dog": "https://http.dog/201"
+}
+```
+    </Tab>
+    <Tab name="400">
+```jsonc
+// Multiple reasons possible, including:
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Required fields not found within request body",
+    "issues": [ /* ... */ ]
+}
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "An account with the same username or email already exists"
+}
+```
+    </Tab>
+    <Tab name="405">
+```json
+{
+    "status": 405,
+    "message": "HTTP method not allowed",
+    "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+    <Tab name="500">
+```json
+{
+    "status": 500,
+    "dog": "https://http.dog/500",
+    "message": "An error occurred while updating database"
+}
+```
+    </Tab>
+</Tabs>

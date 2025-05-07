@@ -1,0 +1,92 @@
+---
+layout: "@/layouts/APILayout.astro"
+---
+
+import Badge from "@/components/Badge.astro";
+import Tabs from "@/components/Tabs.astro";
+import Tab from "@/components/Tab.astro";
+
+<h1>
+	<Badge variant="post">POST</Badge> /api/files/link
+</h1>
+
+Creates a public file sharing link.
+
+## Headers
+
+This route requires the `Authorization` header with the JWT.
+
+```
+Authorization: Bearer (token)
+```
+
+## Body
+
+This route requires a JSON body with the following parameters.
+
+| Name          | Type            | Required | Description                                                   |
+| ------------- | --------------- | -------- | ------------------------------------------------------------- |
+| path          | `string`        | Yes      | The path of the file, relative to the user's folder           |
+| expiresAt     | `string (Date)` | No       | The date and time of link expiration in ISO 8601 format       |
+| password      | `string`        | No       | A password to protect the file link                           |
+| downloadLimit | `number`        | No       | How many times could the file be downloaded through this link |
+
+## Response
+
+This route can return HTTP code 201 (Created), 400 (Bad Request),
+401 (Unauthorized), 405 (Method Not Allowed), and 500 (Internal Server Error)
+
+<Tabs>
+	<Tab name="200">
+```json
+{
+    "status": 201,
+    "dog": "https://http.dog/201",
+    "uuid": "abcdefgh-ijkl-mnop-qrst-uvwxyz123456"
+}
+```
+    </Tab>
+    <Tab name="400">
+```jsonc
+// Multiple reasons possible, including:
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Malformed JSON body"
+}
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Required fields not found within request body",
+    "issues": [ /* ... */ ]
+}
+```
+    </Tab>
+    <Tab name="401">
+```json
+{
+    "status": 401,
+    "dog": "https://http.dog/401",
+    "message": "Invalid (or a lack of) JWT token",
+}
+```
+    </Tab>
+    <Tab name="405">
+```json
+{
+    "status": 405,
+    "message": "HTTP method not allowed",
+    "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+    <Tab name="500">
+```json
+{
+    "status": 500,
+    "dog": "https://http.dog/500",
+    "message": "An error occurred while creating the file link"
+}
+```
+    </Tab>
+</Tabs>

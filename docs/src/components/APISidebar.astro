@@ -1,0 +1,79 @@
+---
+const currentUrl = Astro.url.pathname.substring(15);
+---
+
+<script define:vars={{ currentUrl }}>
+	document.addEventListener("alpine:init", () => {
+		Alpine.data("routeInfo", () => ({
+			routes: {
+				"/api/": "API Overview",
+				"/api/status": "Check Status",
+				"/api/auth/signup": "Sign up",
+				"/api/auth/login": "Log in",
+				"/api/files/upload": "Upload File",
+				"/api/files/download": "Download File",
+				"/api/files/delete": "Delete File",
+				"/api/files/trash": "Trash File",
+				"/api/files/link": "Create a link",
+				"/api/files/link/:shareId": "Public link info",
+				"/api/files/link/:shareId/download": "Download a public file",
+				"/api/user/:username": "Get user info",
+			},
+			currentUrl,
+		}));
+	});
+</script>
+
+<nav x-data="{ showRoute: true }">
+	<header>
+		<a href="/litestore/" class="cleanlink"><h1>litestore</h1></a>
+	</header>
+	<div id="showRoute">
+		<input type="checkbox" id="showRouteToggle" x-model="showRoute" />
+		<label
+			for="showRouteToggle"
+			title="Whether to show the API path or what it does"
+			>Show route</label
+		>
+	</div>
+	<ul x-data="routeInfo" id="routeList">
+		<template x-for="(value, index) in routes">
+			<li>
+				<a
+					:class="{ cleanlink: true, active: currentUrl == index }"
+					:href="'/litestore/docs' + index"
+					x-text="showRoute ? index : value"></a>
+			</li>
+		</template>
+	</ul>
+</nav>
+
+<style>
+	#showRoute {
+		margin: 8px 0 8px 0;
+	}
+
+	#routeList {
+		padding-left: 0;
+		margin: 0;
+		list-style-type: none;
+	}
+
+	#routeList li a {
+		margin: 4px 0;
+		padding: 6px 16px;
+		display: block;
+		transition: 200ms;
+		border-radius: 5px;
+		color: #e0e0e0;
+	}
+
+	#routeList li a:hover {
+		background: rgba(0, 0, 0, 0.25);
+		color: #ffffff;
+	}
+
+	a.active {
+		background: rgba(0, 0, 0, 0.2);
+	}
+</style>

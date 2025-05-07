@@ -1,0 +1,47 @@
+---
+// Component heavily inspired by Starlight's Badge component
+
+interface Props {
+	variant: string;
+}
+
+const { variant } = Astro.props;
+---
+
+<span class:list={["badge", variant]}>
+	<slot />
+</span>
+
+<style>
+	.badge {
+		padding: 0 6px;
+		border-radius: 5px;
+		font-family: var(--monospace-font);
+		font-size: 0.9em;
+		display: inline-block;
+	}
+
+	.note,
+	.get {
+		background-color: hsl(240, 100%, 40%);
+	}
+
+	.success,
+	.post {
+		background-color: green;
+	}
+
+	.patch {
+		background-color: hsl(174, 72%, 36%); /* A darker turquoise */
+	}
+
+	.danger,
+	.delete {
+		background-color: hsl(0, 100%, 40%); /* A darker red */
+	}
+
+	.warning,
+	.put {
+		background-color: hsl(60, 100%, 30%); /* A darker yellow */
+	}
+</style>

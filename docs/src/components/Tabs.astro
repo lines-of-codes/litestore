@@ -1,0 +1,38 @@
+<div
+	x-data="{ currentTab: '', tabNames: [] }"
+	x-init="$nextTick(() => { currentTab = tabNames[0]; })"
+>
+	<div class="tablist">
+		<template x-for="tab in tabNames">
+			<button class="tab-name" x-text="tab" @click="currentTab = tab"
+			></button>
+		</template>
+	</div>
+	<slot />
+</div>
+
+<style>
+	.tab-name {
+		cursor: pointer;
+		padding: 8px 16px;
+		color: inherit;
+		border-radius: 0;
+		border: 1px solid #404050;
+		background-color: #303040;
+		transition: 250ms;
+	}
+
+	.tab-name:hover {
+		color: white;
+		background-color: #404050;
+		border-color: #505060;
+	}
+
+	.tab-name:nth-child(2) {
+		border-radius: 3px 0 0 3px;
+	}
+
+	.tab-name:last-child {
+		border-radius: 0 3px 3px 0;
+	}
+</style>

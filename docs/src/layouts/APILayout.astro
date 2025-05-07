@@ -1,0 +1,23 @@
+---
+import BasicLayout from "@/layouts/BasicLayout.astro";
+import APISidebar from "@/components/APISidebar.astro";
+import "@/styles/generic.css";
+---
+
+<BasicLayout>
+	<div class="main-container">
+		<APISidebar />
+		<main>
+			<slot />
+		</main>
+	</div>
+</BasicLayout>
+
+<style>
+	.main-container {
+		padding: 32px;
+		display: grid;
+		grid-template-columns: 1fr 3fr;
+		gap: 1em;
+	}
+</style>

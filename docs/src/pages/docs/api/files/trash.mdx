@@ -1,0 +1,94 @@
+---
+layout: "@/layouts/APILayout.astro"
+---
+
+import Badge from "@/components/Badge.astro";
+import Tabs from "@/components/Tabs.astro";
+import Tab from "@/components/Tab.astro";
+
+<h1>
+	<Badge variant="patch">PATCH</Badge> /api/files/trash
+</h1>
+
+Puts the file into the trash. (Or recovers it)
+
+## Headers
+
+This route requires the `Authorization` header with the JWT.
+
+```
+Authorization: Bearer (token)
+```
+
+## Body
+
+This route requires a JSON body with the following parameters.
+
+| Name  | Type      | Required | Description                                         |
+| ----- | --------- | -------- | --------------------------------------------------- |
+| path  | `string`  | Yes      | The path of the file, relative to the user's folder |
+| trash | `boolean` | Yes      | If the file is trashed or not.                      |
+
+## Response
+
+This route can return HTTP code 200 (OK), 400 (Bad Request),
+401 (Unauthorized), 405 (Method Not Allowed), and 500 (Internal Server Error)
+
+<Tabs>
+	<Tab name="200">
+```json
+{
+    "status": 200,
+    "dog": "https://http.dog/200"
+}
+```
+    </Tab>
+    <Tab name="400">
+```jsonc
+// Multiple reasons possible, including:
+{
+    "status": 400,
+    "message": "Request body required but not found",
+    "dog": "https://http.dog/400"
+}
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Malformed JSON body"
+}
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Required fields not found within request body",
+    "issues": [ /* ... */ ]
+}
+```
+    </Tab>
+    <Tab name="401">
+```json
+{
+    "status": 401,
+    "dog": "https://http.dog/401",
+    "message": "Invalid (or a lack of) JWT token",
+}
+```
+    </Tab>
+    <Tab name="405">
+```json
+{
+    "status": 405,
+    "message": "HTTP method not allowed",
+    "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+    <Tab name="500">
+```json
+{
+    "status": 500,
+    "dog": "https://http.dog/500",
+    "message": "An error occurred while modifying the file's metadata"
+}
+```
+    </Tab>
+</Tabs>

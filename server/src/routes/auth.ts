@@ -118,9 +118,17 @@ export async function loginRoute(req: BunRequest): Promise<Response> {
 		return requireBodyFields(parsedData.error.issues);
 	}
 
-	const result = await sql`
-        SELECT id, password FROM users WHERE username = ${parsedData.data.username} LIMIT 1
-    `;
+	let result;
+
+	try {
+		result = await sql`
+            SELECT id, password FROM users WHERE username = ${parsedData.data.username} LIMIT 1
+        `;
+	} catch (err) {
+		return internalServerError(
+			"An error occurred while searching for the user"
+		);
+	}
 
 	if (result instanceof Array && result.length === 0) {
 		return Response.json(
