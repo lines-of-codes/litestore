@@ -1,17 +1,41 @@
 ---
-import BasicLayout from "@/layouts/BasicLayout.astro";
 import APISidebar from "@/components/APISidebar.astro";
 import "@/styles/generic.css";
+
+const { frontmatter } = Astro.props;
 ---
 
-<BasicLayout>
-	<div class="main-container">
-		<APISidebar />
-		<main>
-			<slot />
-		</main>
-	</div>
-</BasicLayout>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="litechat/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="color-scheme" content="dark" />
+		<meta name="description" content={frontmatter.description} />
+		<link rel="preconnect" href="https://rsms.me/" />
+		<link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+		<title>{frontmatter.title} - litestore API</title>
+	</head>
+	<body>
+		<div
+			class="main-container"
+			x-data="{ showApiRoutes: true }"
+			x-init="showApiRoutes = !matchMedia('(max-width: 450px)').matches"
+			@resize.throttle.window="showApiRoutes = !matchMedia('(max-width: 450px)').matches"
+		>
+			<nav id="mobileNav">
+				<button class="btn" @click="showApiRoutes = !showApiRoutes">
+					&vellip;
+				</button>
+			</nav>
+			<APISidebar />
+			<main>
+				<slot />
+			</main>
+		</div>
+	</body>
+</html>
 
 <style>
 	.main-container {
@@ -19,5 +43,35 @@ import "@/styles/generic.css";
 		display: grid;
 		grid-template-columns: 1fr 3fr;
 		gap: 1em;
+	}
+
+	#mobileNav {
+		display: none;
+	}
+
+	@media screen and (max-width: 450px) {
+		.main-container {
+			display: block;
+		}
+
+		#mobileNav {
+			display: block;
+			position: fixed;
+			right: 32px;
+		}
+	}
+
+	html,
+	body {
+		width: 100%;
+		min-height: 100vh;
+	}
+
+	body {
+		margin: 0;
+		background: linear-gradient(to top right, #101020, #202030) no-repeat;
+		background-size: cover;
+		color: #e0e0e0;
+		font-family: Inter, sans-serif;
 	}
 </style>

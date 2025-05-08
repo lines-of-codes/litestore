@@ -1,5 +1,9 @@
 ---
-const currentUrl = Astro.url.pathname.substring(15);
+let currentUrl = Astro.url.pathname.substring(15);
+
+if (currentUrl.endsWith("/")) {
+	currentUrl = currentUrl.substring(0, currentUrl.length - 1);
+}
 ---
 
 <script define:vars={{ currentUrl }}>
@@ -24,8 +28,11 @@ const currentUrl = Astro.url.pathname.substring(15);
 	});
 </script>
 
-<nav x-data="{ showRoute: true }">
+<nav x-data="{ showRoute: true }" x-show="showApiRoutes">
 	<header>
+		<a href="/litestore/docs/" class="cleanlink"
+			>&larr; Back to documentation</a
+		>
 		<a href="/litestore/" class="cleanlink"><h1>litestore</h1></a>
 	</header>
 	<div id="showRoute">

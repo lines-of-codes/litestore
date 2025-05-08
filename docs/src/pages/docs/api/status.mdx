@@ -1,11 +1,13 @@
 ---
 layout: "@/layouts/APILayout.astro"
+title: /api/status
+description: An API route for retrieving the API status
 ---
 
 import Badge from "@/components/Badge.astro";
 
 <h1>
-    <Badge variant="get">GET</Badge> /api/status
+	<Badge variant="get">GET</Badge> /api/status
 </h1>
 
 Retrieves the status of the API.
@@ -16,8 +18,8 @@ This route will only return HTTP code `200` at the moment.
 
 ```json
 {
-    "status": 200,
-    "dog": "https://http.dog/200",
-    "message": "OK"
+	"status": 200,
+	"dog": "https://http.dog/200",
+	"message": "OK"
 }
 ```
