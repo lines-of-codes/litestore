@@ -6,6 +6,10 @@ import {
 	uploadRoute,
 	deleteRoute,
 	trashRoute,
+	listFilesRoute,
+	moveFileRoute,
+	copyFileRoute,
+	createFolderRoute,
 } from "./src/routes/files";
 import { publicUserInfoRoute } from "./src/routes/user";
 import { notFound, ok } from "./src/routes/responses";
@@ -27,12 +31,16 @@ const server = Bun.serve({
 		"/api/auth/signup": signUpRoute,
 		"/api/auth/login": loginRoute,
 		"/api/files/upload": uploadRoute,
-		"/api/files/download": downloadRoute,
+		"/api/files/download/*": downloadRoute,
 		"/api/files/delete": deleteRoute,
 		"/api/files/trash": trashRoute,
+		"/api/files/move": moveFileRoute,
+		"/api/files/copy": copyFileRoute,
+		"/api/files/list/*": listFilesRoute,
 		"/api/files/link": createFileLinkRoute,
 		"/api/files/link/:shareId": fileLinkInfoRoute,
 		"/api/files/link/:shareId/download": downloadPublicFileRoute,
+		"/api/files/create/folder": createFolderRoute,
 		"/api/user/:username": publicUserInfoRoute,
 	},
 	fetch() {

@@ -5,6 +5,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { bytesToMebibytes, mebibyte } from "./util/unitSize";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import * as path from "node:path";
 
 interface FileLocation {
 	/**
@@ -95,7 +96,7 @@ export class S3Driver extends Storage {
 	}
 
 	getPath(file: FileLocation): string {
-		return `users/${file.owner}/${file.path}`;
+		return path.join("users", file.owner.toString(), file.path);
 	}
 
 	async list(dir: FileLocation): Promise<string[]> {
@@ -145,7 +146,10 @@ export class S3Driver extends Storage {
 		const startUploadResponse = await this.s3_aws.send(uploadCommand);
 		const uploadId = startUploadResponse.UploadId;
 
-		const partSize = Math.max(defaultPartSize * mebibyte, file.size / maxParts);
+		const partSize = Math.max(
+			defaultPartSize * mebibyte,
+			file.size / maxParts
+		);
 		const partCount = Math.ceil(file.size / partSize);
 
 		let fileSize = file.size;
@@ -170,7 +174,7 @@ export class S3Driver extends Storage {
 					Key: filePath,
 					UploadId: uploadId,
 					PartNumber: i,
-				}),
+				})
 			);
 
 			presignedUrls.push(presignedUrl);

@@ -1,10 +1,12 @@
 import type { ZodIssue } from "zod";
 
-export const ok = Response.json({
+export const okJson = {
 	status: 200,
 	dog: "https://http.dog/200",
 	message: "OK",
-});
+};
+
+export const ok = Response.json(okJson);
 
 /**
  * Returns HTTP 405 Method not allowed

@@ -1,0 +1,106 @@
+---
+title: /api/files/move
+method: PATCH
+summary: Move File
+description: An API route for moving a file
+---
+
+import Tabs from "@/components/Tabs.astro";
+import Tab from "@/components/Tab.astro";
+
+Moves the file.
+
+## Headers
+
+This route requires the `Authorization` header with the JWT.
+
+```
+Authorization: Bearer (token)
+```
+
+## Body
+
+This route requires a JSON body with the following parameters.
+
+| Name | Type     | Required | Description                                                  |
+| ---- | -------- | -------- | ------------------------------------------------------------ |
+| from | `string` | Yes      | The path of the file, relative to the user's folder          |
+| to   | `string` | Yes      | The path of the target folder, relative to the user's folder |
+
+## Response
+
+This route can return HTTP code 200 (OK), 400 (Bad Request), 401 (Unauthorized),
+404 (Not Found) 405 (Method Not Allowed), and 500 (Internal Server Error)
+
+<Tabs>
+	<Tab name="200">
+```json
+{
+    "status": 200,
+    "dog": "https://http.dog/200"
+}
+```
+    </Tab>
+    <Tab name="400">
+```jsonc
+// Multiple reasons possible, including:
+{
+    "status": 400,
+    "message": "Request body required but not found",
+    "dog": "https://http.dog/400"
+}
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Malformed JSON body"
+}
+{
+    "status": 400,
+    "dog": "https://http.dog/400",
+    "message": "Required fields not found within request body",
+    "issues": [ /* ... */ ]
+}
+```
+    </Tab>
+    <Tab name="401">
+```json
+{
+    "status": 401,
+    "dog": "https://http.dog/401",
+    "message": "Invalid (or a lack of) JWT token",
+}
+```
+    </Tab>
+    <Tab name="404">
+```json
+{
+    "status": 404,
+    "dog": "https://http.dog/404",
+    "message": "Target folder not found"
+}
+```
+    </Tab>
+    <Tab name="405">
+```json
+{
+    "status": 405,
+    "message": "HTTP method not allowed",
+    "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+    <Tab name="500">
+```json
+{
+    "status": 500,
+    "dog": "https://http.dog/500",
+    "message": "An error occurred while updating the file's folder"
+}
+```
+    </Tab>
+</Tabs>
+
+## Implementation Details
+
+Due to performance reasons, The file is only "moved" within the database,
+and not in the S3 bucket to keep the request fast.

@@ -1,21 +1,20 @@
 ---
 import APISidebar from "@/components/APISidebar.astro";
 import "@/styles/generic.css";
+import "@/styles/inter.css";
 
-const { frontmatter } = Astro.props;
+const { data } = Astro.props;
 ---
 
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="litechat/favicon.svg" />
+		<link rel="icon" type="image/svg+xml" href="/litestore/favicon.svg" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="color-scheme" content="dark" />
-		<meta name="description" content={frontmatter.description} />
-		<link rel="preconnect" href="https://rsms.me/" />
-		<link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-		<title>{frontmatter.title} - litestore API</title>
+		<meta name="description" content={data.description} />
+		<title>{data.title} - litestore API</title>
 	</head>
 	<body>
 		<div
@@ -72,6 +71,6 @@ const { frontmatter } = Astro.props;
 		background: linear-gradient(to top right, #101020, #202030) no-repeat;
 		background-size: cover;
 		color: #e0e0e0;
-		font-family: Inter, sans-serif;
+		font-family: InterVariable, sans-serif;
 	}
 </style>

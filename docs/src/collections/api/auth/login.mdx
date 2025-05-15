@@ -1,16 +1,12 @@
 ---
-layout: "@/layouts/APILayout.astro"
 title: /api/auth/login
+method: POST
+summary: Log in
 description: An API route for logging into litestore with a username & password pair.
 ---
 
-import Badge from "@/components/Badge.astro";
 import Tabs from "@/components/Tabs.astro";
 import Tab from "@/components/Tab.astro";
-
-<h1>
-	<Badge variant="post">POST</Badge> /api/auth/login
-</h1>
 
 ## Body
 

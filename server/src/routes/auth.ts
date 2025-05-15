@@ -125,6 +125,7 @@ export async function loginRoute(req: BunRequest): Promise<Response> {
             SELECT id, password FROM users WHERE username = ${parsedData.data.username} LIMIT 1
         `;
 	} catch (err) {
+		console.error(err);
 		return internalServerError(
 			"An error occurred while searching for the user"
 		);

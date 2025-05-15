@@ -1,0 +1,68 @@
+---
+title: /api/files/download/*
+method: GET
+summary: Download File
+description: An API route for downloading a private file
+---
+
+import Badge from "@/components/Badge.astro";
+import Tabs from "@/components/Tabs.astro";
+import Tab from "@/components/Tab.astro";
+
+Create a S3 presigned link for the download request.
+
+A <Badge variant="get">GET</Badge> request can simply be sent to the
+returned link to download the file. Read more about [presigned URLs
+on S3's documentation.](https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html)
+
+## Headers
+
+This route requires the `Authorization` header with the JWT.
+
+```
+Authorization: Bearer (token)
+```
+
+## Route Parameter
+
+This route requires the file path to be specified in the URL.
+
+Some examples include:
+
+-   `http://localhost:3000/api/files/download/4.jpg`
+-   `http://localhost:3000/api/files/download/Images/4.jpg`
+
+## Response
+
+This route can return HTTP code 200 (OK), 401 (Unauthorized),
+and 405 (Method Not Allowed)
+
+<Tabs>
+	<Tab name="200">
+```json
+{
+    "status": 200,
+    "dog": "https://http.dog/200",
+    "url": "link to download the file from S3"
+}
+```
+    </Tab>
+    <Tab name="401">
+```json
+{
+    "status": 401,
+    "dog": "https://http.dog/401",
+    "message": "Invalid (or a lack of) JWT token",
+}
+```
+    </Tab>
+    <Tab name="405">
+```json
+{
+    "status": 405,
+    "message": "HTTP method not allowed",
+    "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+</Tabs>

@@ -1,0 +1,100 @@
+---
+title: /api/files/list/*
+method: GET
+summary: List Files
+description: An API route for listing files in a folder
+---
+
+import Badge from "@/components/Badge.astro";
+import Tabs from "@/components/Tabs.astro";
+import Tab from "@/components/Tab.astro";
+
+<h1>
+	<Badge variant="get">GET</Badge> /api/files/list/\*
+</h1>
+
+Lists a file in a directory.
+
+## Headers
+
+This route requires the `Authorization` header with the JWT.
+
+```
+Authorization: Bearer (token)
+```
+
+## Route Parameter
+
+This route requires the folder path to be specified in the URL.
+
+Some examples include:
+
+-   `http://localhost:3000/api/files/list/`: Lists the contents of the root
+    directory of the current user
+-   `http://localhost:3000/api/files/list/abc/`: Lists the contents of the
+    abc folder.
+
+## Response
+
+This route can return HTTP code 200 (OK), 401 (Unauthorized), 404 (Not Found),
+405 (Method Not Allowed), and 500 (Internal Server Error)
+
+<Tabs>
+	<Tab name="200">
+```json
+{
+    "status": 200,
+    "dog": "https://http.dog/200",
+    "files": [
+        {
+            "id": 4,
+            "filename": "abc.jpg",
+            "filepath": "/4.jpg",
+            "is_folder": false,
+            "parent_folder": 1,
+            "created": "2025-05-04T08:04:02.690Z",
+            "updated": "2025-05-04T08:04:02.690Z",
+            "trashed": false,
+            "id_users": 1
+        }
+    ]
+}
+```
+    </Tab>
+    <Tab name="401">
+```json
+{
+    "status": 401,
+    "dog": "https://http.dog/401",
+    "message": "Invalid (or a lack of) JWT token",
+}
+```
+    </Tab>
+    <Tab name="404">
+```json
+{
+    "status": 404,
+    "dog": "https://http.dog/404",
+	"message": "Requested resource not found"
+}
+```
+    </Tab>
+    <Tab name="405">
+```json
+{
+    "status": 405,
+    "message": "HTTP method not allowed",
+    "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+    <Tab name="500">
+```json
+{
+    "status": 500,
+    "dog": "https://http.dog/500",
+    "message": "An error occurred while searching for the files"
+}
+```
+    </Tab>
+</Tabs>

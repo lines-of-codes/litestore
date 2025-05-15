@@ -1,0 +1,70 @@
+---
+title: /api/
+summary: API Overview
+description: A short overview of the litestore API.
+---
+
+# litestore API (dev)
+
+The litestore HTTP API _tries_ to be developer-friendly and simple, and it
+heavily uses JSON for both the request and response.
+
+**Note:** The API may be unconsistent at times and breaking changes may be
+made until a stable release is made available
+
+## Dog
+
+The API response usually includes:
+
+```json
+{
+	"status": 200,
+	"message": "(optional message)",
+	"dog": "https://http.dog/200"
+}
+```
+
+The http.dog link is there for educational purposes (and it makes the API more fun ✨).
+Credits goes to the original creator of the http.dog website.
+
+## Errors
+
+There are a few errors that are common among most routes.
+
+### Data Validation
+
+The API uses Zod to validate the requests' body and will return a response
+similar to the following if the validation isn't passed:
+
+```json
+{
+	"status": 400,
+	"message": "Required fields not found within request body",
+	"dog": "https://http.dog/400",
+	"issues": [
+		{
+			"code": "invalid_type",
+			"expected": "string",
+			"received": "undefined",
+			"path": ["path"],
+			"message": "Required"
+		}
+	] /* type: ZodIssue[] */
+}
+```
+
+### Internal Server Error
+
+If HTTP code 500 (Internal Server Error) is returned, the possible causes may
+include (but not limited to):
+
+-   Errors while executing SQL statements (server code's fault/PostgreSQL connection configured incorrectly)
+-   Errors while interacting with S3 (S3 connection configured incorrectly)
+
+In any case, If you are interacting with a server you own and you encounter a
+code 500 error, Check the server's log and the exception should be printed there.
+
+If a request returns a HTTP code 500 and you have the need to display the reason
+to the user, Please make sure that the response's body is valid JSON. If it
+returns a response with HTML content, It is likely an unhandled exception.
+Feel free to report any unhandled exceptions.

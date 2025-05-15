@@ -1,7 +1,8 @@
 ---
-layout: "@/layouts/APILayout.astro"
-title: /api/files/trash
-description: An API route for moving a file to the trash
+title: /api/files/delete
+method: DELETE
+summary: Delete File
+description: An API route for deleting a file
 ---
 
 import Badge from "@/components/Badge.astro";
@@ -9,10 +10,14 @@ import Tabs from "@/components/Tabs.astro";
 import Tab from "@/components/Tab.astro";
 
 <h1>
-	<Badge variant="patch">PATCH</Badge> /api/files/trash
+	<Badge variant="delete">DELETE</Badge> /api/files/delete
 </h1>
 
-Puts the file into the trash. (Or recovers it)
+Deletes the file.
+
+**This request might take a long time,** depending on the file size
+and the disk speed of the S3 instance. Adjust the timeout of the
+request accordingly.
 
 ## Headers
 
@@ -26,10 +31,9 @@ Authorization: Bearer (token)
 
 This route requires a JSON body with the following parameters.
 
-| Name  | Type      | Required | Description                                         |
-| ----- | --------- | -------- | --------------------------------------------------- |
-| path  | `string`  | Yes      | The path of the file, relative to the user's folder |
-| trash | `boolean` | Yes      | If the file is trashed or not.                      |
+| Name | Type     | Required | Description                                         |
+| ---- | -------- | -------- | --------------------------------------------------- |
+| path | `string` | Yes      | The path of the file, relative to the user's folder |
 
 ## Response
 
@@ -89,7 +93,7 @@ This route can return HTTP code 200 (OK), 400 (Bad Request),
 {
     "status": 500,
     "dog": "https://http.dog/500",
-    "message": "An error occurred while modifying the file's metadata"
+    "message": "An error occurred while the file's metadata is being deleted"
 }
 ```
     </Tab>

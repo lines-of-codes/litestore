@@ -6,7 +6,7 @@ interface ServerConfig {
 const configFile = Bun.file("config.json");
 
 export let config: ServerConfig = {
-	jwtExpiration: "1d",
+	jwtExpiration: "1w",
 	defaultStorageQuota: null,
 };
 

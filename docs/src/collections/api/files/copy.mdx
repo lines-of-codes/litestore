@@ -1,22 +1,14 @@
 ---
-layout: "@/layouts/APILayout.astro"
-title: /api/files/delete
-description: An API route for deleting a file
+title: /api/files/copy
+method: POST
+summary: Copy File
+description: An API route for copying a file
 ---
 
-import Badge from "@/components/Badge.astro";
 import Tabs from "@/components/Tabs.astro";
 import Tab from "@/components/Tab.astro";
 
-<h1>
-	<Badge variant="delete">DELETE</Badge> /api/files/delete
-</h1>
-
-Deletes the file.
-
-**This request might take a long time,** depending on the file size
-and the disk speed of the S3 instance. Adjust the timeout of the
-request accordingly.
+Copies a file.
 
 ## Headers
 
@@ -30,14 +22,15 @@ Authorization: Bearer (token)
 
 This route requires a JSON body with the following parameters.
 
-| Name | Type     | Required | Description                                         |
-| ---- | -------- | -------- | --------------------------------------------------- |
-| path | `string` | Yes      | The path of the file, relative to the user's folder |
+| Name     | Type     | Required | Description                               |
+| -------- | -------- | -------- | ----------------------------------------- |
+| from     | `number` | Yes      | The ID of the file or folder being copied |
+| toFolder | `number` | Yes      | The ID of the target folder               |
 
 ## Response
 
-This route can return HTTP code 200 (OK), 400 (Bad Request),
-401 (Unauthorized), 405 (Method Not Allowed), and 500 (Internal Server Error)
+This route can return HTTP code 200 (OK), 400 (Bad Request), 401 (Unauthorized),
+404 (Not Found) 405 (Method Not Allowed), and 500 (Internal Server Error)
 
 <Tabs>
 	<Tab name="200">
@@ -78,6 +71,15 @@ This route can return HTTP code 200 (OK), 400 (Bad Request),
 }
 ```
     </Tab>
+    <Tab name="404">
+```json
+{
+    "status": 404,
+    "dog": "https://http.dog/404",
+    "message": "Target folder not found"
+}
+```
+    </Tab>
     <Tab name="405">
 ```json
 {
@@ -92,8 +94,13 @@ This route can return HTTP code 200 (OK), 400 (Bad Request),
 {
     "status": 500,
     "dog": "https://http.dog/500",
-    "message": "An error occurred while the file's metadata is being deleted"
+    "message": "An error occurred while updating the file's folder"
 }
 ```
     </Tab>
 </Tabs>
+
+## Implementation Details
+
+To keep API response time low, the file is only "copied" within the database
+and not S3.

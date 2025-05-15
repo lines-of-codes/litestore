@@ -7,12 +7,12 @@
 		"@types/bun": "latest"
 	},
 	"peerDependencies": {
-		"typescript": "^5"
+		"typescript": "^5.8.3"
 	},
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.802.0",
-		"@aws-sdk/s3-request-presigner": "^3.802.0",
+		"@aws-sdk/client-s3": "^3.806.0",
+		"@aws-sdk/s3-request-presigner": "^3.806.0",
 		"@panva/jose": "npm:@jsr/panva__jose",
-		"zod": "^3.24.3"
+		"zod": "^3.24.4"
 	}
 }

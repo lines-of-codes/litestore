@@ -1,0 +1,42 @@
+---
+import type { GetStaticPaths } from "astro";
+import APILayout from "@/layouts/APILayout.astro";
+import { getCollection } from "astro:content";
+import { render } from "astro:content";
+import Badge from "@/components/Badge.astro";
+
+export const getStaticPaths = (async () => {
+	const apiDocs = await getCollection("apiDocs");
+
+	const result = apiDocs.map((docs) => ({
+		params: { path: docs.id === "index" ? undefined : docs.id },
+		props: { docs },
+	}));
+
+	return result;
+}) satisfies GetStaticPaths;
+
+const { docs } = Astro.props;
+const { Content } = await render(docs);
+---
+
+<APILayout data={docs.data}>
+	<h1>
+		{
+			docs.data.method === undefined ? null : (
+				<Badge variant={docs.data.method.toLowerCase()}>
+					{docs.data.method}
+				</Badge>
+			)
+		}
+		{docs.data.title}
+	</h1>
+
+	<Content />
+</APILayout>
+
+<style>
+	h1:first-child {
+		margin: 1em 0;
+	}
+</style>

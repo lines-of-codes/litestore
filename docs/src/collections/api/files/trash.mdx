@@ -1,7 +1,8 @@
 ---
-layout: "@/layouts/APILayout.astro"
-title: /api/files/download
-description: An API route for downloading a private file
+title: /api/files/trash
+method: PATCH
+summary: Trash File
+description: An API route for moving a file to the trash
 ---
 
 import Badge from "@/components/Badge.astro";
@@ -9,14 +10,10 @@ import Tabs from "@/components/Tabs.astro";
 import Tab from "@/components/Tab.astro";
 
 <h1>
-	<Badge variant="get">GET</Badge> /api/files/download
+	<Badge variant="patch">PATCH</Badge> /api/files/trash
 </h1>
 
-Create a S3 presigned link for the download request.
-
-A <Badge variant="get">GET</Badge> request can simply be sent to the
-returned link to download the file. Read more about [presigned URLs
-on S3's documentation.](https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html)
+Puts the file into the trash. (Or recovers it)
 
 ## Headers
 
@@ -30,22 +27,22 @@ Authorization: Bearer (token)
 
 This route requires a JSON body with the following parameters.
 
-| Name | Type     | Required | Description                                         |
-| ---- | -------- | -------- | --------------------------------------------------- |
-| path | `string` | Yes      | The path of the file, relative to the user's folder |
+| Name  | Type      | Required | Description                                         |
+| ----- | --------- | -------- | --------------------------------------------------- |
+| path  | `string`  | Yes      | The path of the file, relative to the user's folder |
+| trash | `boolean` | Yes      | If the file is trashed or not.                      |
 
 ## Response
 
 This route can return HTTP code 200 (OK), 400 (Bad Request),
-401 (Unauthorized), and 405 (Method Not Allowed)
+401 (Unauthorized), 405 (Method Not Allowed), and 500 (Internal Server Error)
 
 <Tabs>
 	<Tab name="200">
 ```json
 {
     "status": 200,
-    "dog": "https://http.dog/200",
-    "url": "link to download the file from S3"
+    "dog": "https://http.dog/200"
 }
 ```
     </Tab>
@@ -85,6 +82,15 @@ This route can return HTTP code 200 (OK), 400 (Bad Request),
     "status": 405,
     "message": "HTTP method not allowed",
     "dog": "https://http.dog/405"
+}
+```
+    </Tab>
+    <Tab name="500">
+```json
+{
+    "status": 500,
+    "dog": "https://http.dog/500",
+    "message": "An error occurred while modifying the file's metadata"
 }
 ```
     </Tab>
