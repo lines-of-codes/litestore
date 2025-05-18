@@ -1,14 +1,14 @@
 ---
-title: /api/files/copy
+title: /api/files/create/folder
 method: POST
-summary: Copy File
-description: An API route for copying a file
+summary: Create Directory
+description: An API route for creating a directory
 ---
 
 import Tabs from "@/components/Tabs.astro";
 import Tab from "@/components/Tab.astro";
 
-Copies a file.
+Create a directory.
 
 ## Headers
 
@@ -22,10 +22,9 @@ Authorization: Bearer (token)
 
 This route requires a JSON body with the following parameters.
 
-| Name     | Type     | Required | Description                                 |
-| -------- | -------- | -------- | ------------------------------------------- |
-| from     | `string` | Yes      | The path of the file or folder being copied |
-| toFolder | `string` | Yes      | The path of the target folder               |
+| Name | Type     | Required | Description                          |
+| ---- | -------- | -------- | ------------------------------------ |
+| path | `string` | Yes      | The path of the folder being created |
 
 ## Response
 
@@ -76,7 +75,7 @@ This route can return HTTP code 200 (OK), 400 (Bad Request), 401 (Unauthorized),
 {
     "status": 404,
     "dog": "https://http.dog/404",
-    "message": "Target folder not found"
+    "message": "Parent folder not found"
 }
 ```
     </Tab>
@@ -94,13 +93,8 @@ This route can return HTTP code 200 (OK), 400 (Bad Request), 401 (Unauthorized),
 {
     "status": 500,
     "dog": "https://http.dog/500",
-    "message": "An error occurred while updating the file's folder"
+    "message": "An error occurred while creating the folder in database"
 }
 ```
     </Tab>
 </Tabs>
-
-## Implementation Details
-
-To keep API response time low, the file is only "copied" within the database
-and not S3.

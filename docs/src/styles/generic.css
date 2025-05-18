@@ -63,3 +63,9 @@ th {
 	padding: 6px 10px;
 	border: 1px solid #404050;
 }
+
+blockquote {
+	background: #303040;
+	border-left: 3px solid #404050;
+	padding: 1px 6px 1px 8px;
+}

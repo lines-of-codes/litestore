@@ -1,6 +1,7 @@
 import { sql, type BunRequest } from "bun";
 import {
 	internalServerError,
+	okJson,
 	requireBodyFields,
 	wrongMethod,
 } from "./responses";
@@ -9,7 +10,8 @@ import { config } from "../config";
 import { signJwt, verifyJwt } from "../jwt";
 import { storage } from "../storage";
 import type { JWTPayload } from "@panva/jose";
-import { database } from "../db";
+import { database, type NewFileInfo } from "../db";
+import { corsAllowOrigin } from "../util/cors";
 
 const signUpInfo = z.object({
 	email: z.string().email(),
@@ -23,7 +25,7 @@ const logInInfo = z.object({
 });
 
 export async function signUpRoute(req: BunRequest): Promise<Response> {
-	if (req.method !== "POST") return wrongMethod;
+	if (req.method !== "POST") return wrongMethod("OPTIONS, POST");
 
 	const rawData = await req.json();
 	const parsed = await signUpInfo.safeParseAsync(rawData);
@@ -76,9 +78,9 @@ export async function signUpRoute(req: BunRequest): Promise<Response> {
             RETURNING id
         `;
 
-		const rootFile = {
+		const rootFile: NewFileInfo = {
 			filename: id.toString(),
-			filepath: `users/${id}/`,
+			virtual_path: `users/${id}/`,
 			is_folder: true,
 			id_users: id,
 		};
@@ -110,7 +112,7 @@ export async function signUpRoute(req: BunRequest): Promise<Response> {
 }
 
 export async function loginRoute(req: BunRequest): Promise<Response> {
-	if (req.method !== "POST") return wrongMethod;
+	if (req.method !== "POST") return wrongMethod("OPTIONS, POST");
 
 	const parsedData = await logInInfo.safeParseAsync(await req.json());
 
@@ -161,11 +163,15 @@ export async function loginRoute(req: BunRequest): Promise<Response> {
 				console.error(err);
 			}
 
-			return Response.json({
-				status: 200,
-				dog: "https://http.dog/200",
-				token: await signJwt(id),
-			});
+			return Response.json(
+				{
+					...okJson,
+					token: await signJwt(id),
+				},
+				{
+					headers: corsAllowOrigin,
+				}
+			);
 		}
 
 		return Response.json(
@@ -177,6 +183,7 @@ export async function loginRoute(req: BunRequest): Promise<Response> {
 				status: 401,
 				headers: {
 					"WWW-Authenticate": "Bearer",
+					...corsAllowOrigin,
 				},
 			}
 		);

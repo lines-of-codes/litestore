@@ -15,6 +15,7 @@ import {
 	invalidUrlParameter,
 } from "./responses";
 import * as path from "node:path";
+import { corsPreflightAuthRoute } from "../util/cors";
 
 const createLinkRequest = z.object({
 	path: z.string(),
@@ -36,20 +37,20 @@ const downloadLinkRequest = z.object({
 const shareIdValidation = z.string().uuid();
 
 export async function createFileLinkRoute(req: BunRequest): Promise<Response> {
-	if (req.method !== "POST") return wrongMethod;
+	if (req.method !== "POST") return wrongMethod("POST");
 
 	const payload = await verifyAuth(req);
-	if (payload === null) return unauthenticated;
+	if (payload === null) return unauthenticated();
 
 	const uid = payload.uid as undefined | number;
-	if (uid === undefined) return unauthenticated;
+	if (uid === undefined) return unauthenticated();
 
 	let jsonObj: any = {};
 
 	try {
 		jsonObj = await req.json();
 	} catch {
-		return malformedJson;
+		return malformedJson();
 	}
 
 	const parsedData = await createLinkRequest.safeParseAsync(jsonObj);
@@ -107,12 +108,12 @@ export async function getFileLinkInfoRoute(shareId: string): Promise<Response> {
 	`;
 
 	if (result instanceof Array && result.length === 0) {
-		return notFound;
+		return notFound();
 	}
 
 	const [{ filename, trashed, password, download_count }] = result;
 
-	if (trashed) return notFound;
+	if (trashed) return notFound();
 
 	return Response.json({
 		status: 200,
@@ -126,20 +127,20 @@ export async function getFileLinkInfoRoute(shareId: string): Promise<Response> {
 export async function patchFileLinkInfoRoute(
 	req: BunRequest<"/api/files/link/:shareId">
 ): Promise<Response> {
-	if (req.body === null) return bodyRequired;
+	if (req.body === null) return bodyRequired();
 
 	const payload = await verifyAuth(req);
-	if (payload === null) return unauthenticated;
+	if (payload === null) return unauthenticated();
 
 	const uid = payload.uid as undefined | number;
-	if (uid === undefined) return unauthenticated;
+	if (uid === undefined) return unauthenticated();
 
 	let jsonObj: any = {};
 
 	try {
 		jsonObj = await req.json();
 	} catch {
-		return malformedJson;
+		return malformedJson();
 	}
 
 	const parsedData = await editLinkRequest.safeParseAsync(jsonObj);
@@ -171,17 +172,17 @@ export async function patchFileLinkInfoRoute(
 		);
 	}
 
-	return ok;
+	return ok();
 }
 
 export async function deleteFileLinkInfoRoute(
 	req: BunRequest<"/api/files/link/:shareId">
 ): Promise<Response> {
 	const payload = await verifyAuth(req);
-	if (payload === null) return unauthenticated;
+	if (payload === null) return unauthenticated();
 
 	const uid = payload.uid as undefined | number;
-	if (uid === undefined) return unauthenticated;
+	if (uid === undefined) return unauthenticated();
 
 	const shareId = req.params.shareId;
 
@@ -191,7 +192,7 @@ export async function deleteFileLinkInfoRoute(
 	`;
 
 	if (result instanceof Array && result.length === 0) {
-		return notFound;
+		return notFound();
 	}
 
 	try {
@@ -203,7 +204,7 @@ export async function deleteFileLinkInfoRoute(
 		);
 	}
 
-	return ok;
+	return ok();
 }
 
 export async function fileLinkInfoRoute(
@@ -221,15 +222,17 @@ export async function fileLinkInfoRoute(
 			return await patchFileLinkInfoRoute(req);
 		case "DELETE":
 			return await deleteFileLinkInfoRoute(req);
+		case "OPTIONS":
+			return corsPreflightAuthRoute("OPTIONS, GET, PATCH, DELETE");
 		default:
-			return wrongMethod;
+			return wrongMethod("OPTIONS, GET, PATCH, DELETE");
 	}
 }
 
 export async function downloadPublicFileRoute(
 	req: BunRequest<"/api/files/link/:shareId/download">
 ): Promise<Response> {
-	if (req.method !== "GET") return wrongMethod;
+	if (req.method !== "GET") return wrongMethod("GET");
 
 	const idValidation = shareIdValidation.safeParse(req.params.shareId);
 
@@ -243,41 +246,41 @@ export async function downloadPublicFileRoute(
 	);
 
 	const result = await sql`
-		SELECT f.filename, f.filepath, f.trashed, fl.password, fl.download_limit, fl.download_count
+		SELECT f.filename, f.s3_path, f.trashed, fl.password, fl.download_limit, fl.download_count
 		FROM file_links as fl, files as f
 		WHERE fl.id = ${shareId} AND fl.id_files = f.id
 		LIMIT 1;
 	`;
 
 	if (result instanceof Array && result.length === 0) {
-		return notFound;
+		return notFound();
 	}
 
 	const [fileLink] = result;
 
 	if (fileLink.trashed) {
-		return notFound;
+		return notFound();
 	}
 
 	if (
 		fileLink.download_limit != null &&
 		fileLink.download_count >= fileLink.download_limit
 	) {
-		return forbidden;
+		return forbidden();
 	}
 
 	if (fileLink.password !== null) {
 		if (!parsedData.success)
 			return requireBodyFields(parsedData.error.issues);
 
-		if (parsedData.data.password === undefined) return forbidden;
+		if (parsedData.data.password === undefined) return forbidden();
 
 		const passwordCorrect = await Bun.password.verify(
 			parsedData.data.password,
 			fileLink.password
 		);
 
-		if (!passwordCorrect) return forbidden;
+		if (!passwordCorrect) return forbidden();
 	}
 
 	if (fileLink.download_count + 1 >= fileLink.download_count) {
@@ -291,7 +294,7 @@ export async function downloadPublicFileRoute(
 		`;
 	}
 
-	const url = storage.downloadLink(fileLink.filepath);
+	const url = storage.downloadLink(fileLink.s3_path);
 
 	return Response.json({
 		name: fileLink.filename,

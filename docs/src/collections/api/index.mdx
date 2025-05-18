@@ -27,6 +27,29 @@ The API response usually includes:
 The http.dog link is there for educational purposes (and it makes the API more fun ✨).
 Credits goes to the original creator of the http.dog website.
 
+## CORS
+
+If you send a HTTP request with the method `OPTIONS`, the server will assume that
+you're sending a [CORS preflight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request)
+and will respond with the appropriate headers.
+
+Specifically, The response will contain the following headers:
+
+```
+HTTP/1.1 204 No Content
+Access-Control-Allow-Authorization: Authorization
+Access-Control-Allow-Origin: http://localhost:5173
+Allow: OPTIONS, GET, PATCH, DELETE
+Content-Length: 0
+Date: ...
+```
+
+Of course, The value of these headers will change depending on which route
+you are sending the `OPTIONS` request to.
+
+> **Note:** The `Access-Control-Allow-Origin` header is configured within the
+> server's `.env` file.
+
 ## Errors
 
 There are a few errors that are common among most routes.
@@ -64,7 +87,5 @@ include (but not limited to):
 In any case, If you are interacting with a server you own and you encounter a
 code 500 error, Check the server's log and the exception should be printed there.
 
-If a request returns a HTTP code 500 and you have the need to display the reason
-to the user, Please make sure that the response's body is valid JSON. If it
-returns a response with HTML content, It is likely an unhandled exception.
-Feel free to report any unhandled exceptions.
+The error message returned by the API tries to be as descriptive and informative
+about where the error happened as possible.

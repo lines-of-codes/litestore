@@ -10,19 +10,20 @@ import {
 	malformedJson,
 	notFound,
 	okJson,
+	notFoundMsg,
 } from "./responses";
 import { z } from "zod";
 import { verifyAuth } from "./auth";
 import { storage } from "../storage";
-import { database, type FileInfo } from "../db";
-import { cryptoRandomString } from "../util/string";
+import { database, type FileInfo, type NewFileInfo } from "../db";
+import { corsAllowOrigin, corsPreflightAuthRoute } from "../util/cors";
 
 const uploadInfo = z.object({
 	path: z.string(),
 	size: z.number(),
 });
 
-const downloadRequest = z.object({
+const targetFileRequest = z.object({
 	path: z.string(),
 });
 
@@ -38,31 +39,49 @@ const moveFileRequest = z.object({
 
 const copyFileRequest = z.object({
 	/**
-	 * File ID
+	 * File path
 	 */
-	from: z.number(),
+	from: z.string(),
 	/**
-	 * Folder ID
+	 * Folder path
 	 */
-	toFolder: z.number(),
+	toFolder: z.string(),
 });
 
+/**
+ * File info interface specifically for the client.
+ */
+interface ClientFileInfo {
+	id: number;
+	filename: string;
+	/**
+	 * The virtual path
+	 */
+	path: string;
+	is_folder: boolean;
+	parent_folder: null | number;
+	created: Date;
+	updated: Date;
+	trashed: boolean;
+	id_users: number;
+}
+
 export async function uploadRoute(req: BunRequest): Promise<Response> {
-	if (req.method !== "POST") return wrongMethod;
+	if (req.method !== "POST") return wrongMethod("POST");
 
 	const payload = await verifyAuth(req);
-	if (payload === null) return unauthenticated;
+	if (payload === null) return unauthenticated();
 
 	const uid = payload.uid as number;
 
-	if (req.body === null) return bodyRequired;
+	if (req.body === null) return bodyRequired();
 
 	let jsonObj: any = {};
 
 	try {
 		jsonObj = await req.json();
 	} catch {
-		return malformedJson;
+		return malformedJson();
 	}
 
 	const parsedData = await uploadInfo.safeParseAsync(jsonObj);
@@ -71,14 +90,14 @@ export async function uploadRoute(req: BunRequest): Promise<Response> {
 
 	const newFile = await database.newFile({
 		filename: path.basename(parsedData.data.path),
-		filepath: parsedData.data.path,
+		virtual_path: parsedData.data.path,
 		is_folder: false,
 		id_users: uid,
 	});
 
 	const uploadInstruction = await storage.uploadLink({
 		owner: uid as number,
-		path: newFile.filepath,
+		path: newFile.s3_path,
 		size: parsedData.data.size,
 	});
 
@@ -95,19 +114,20 @@ export async function uploadRoute(req: BunRequest): Promise<Response> {
 }
 
 export async function downloadRoute(req: BunRequest): Promise<Response> {
-	if (req.method !== "GET") return wrongMethod;
+	if (req.method !== "GET") return wrongMethod("GET");
 
 	const payload = await verifyAuth(req);
-	if (payload === null) return unauthenticated;
+	if (payload === null) return unauthenticated();
 
 	const uid = payload.uid as number;
 
-	const path = new URL(req.url).pathname.substring(19);
+	const virtualPath = new URL(req.url).pathname.substring(19);
 
-	const url = storage.downloadLink({
-		owner: uid,
-		path: path,
-	});
+	const url = storage.downloadLink(
+		await database.getRealPath(
+			path.join("users", uid.toString(), virtualPath)
+		)
+	);
 
 	return Response.json({
 		status: 200,
@@ -117,30 +137,29 @@ export async function downloadRoute(req: BunRequest): Promise<Response> {
 }
 
 export async function deleteRoute(req: BunRequest): Promise<Response> {
-	if (req.method !== "DELETE") return wrongMethod;
+	if (req.method !== "DELETE") return wrongMethod("DELETE");
 
 	const payload = await verifyAuth(req);
-	if (payload === null) return unauthenticated;
+	if (payload === null) return unauthenticated();
 
 	const uid = payload.uid as number;
 
-	if (req.body === null) return bodyRequired;
+	if (req.body === null) return bodyRequired();
 
 	let jsonObj: any = {};
 
 	try {
 		jsonObj = await req.json();
 	} catch {
-		return malformedJson;
+		return malformedJson();
 	}
 
-	const parsedData = await downloadRequest.safeParseAsync(jsonObj);
-
+	const parsedData = await targetFileRequest.safeParseAsync(jsonObj);
 	if (!parsedData.success) return requireBodyFields(parsedData.error.issues);
 
 	try {
-		const fp = `users/${uid}/${parsedData.data.path}`;
-		await sql`DELETE FROM files WHERE filepath = ${fp} LIMIT 1`;
+		const fp = path.join("users", uid.toString(), parsedData.data.path);
+		await sql`DELETE FROM files WHERE virtual_path = ${fp}`;
 	} catch (err) {
 		console.error(err);
 		return internalServerError(
@@ -153,33 +172,33 @@ export async function deleteRoute(req: BunRequest): Promise<Response> {
 		path: parsedData.data.path,
 	});
 
-	return ok;
+	return ok();
 }
 
 export async function trashRoute(req: BunRequest): Promise<Response> {
-	if (req.method !== "PATCH") return wrongMethod;
+	if (req.method !== "PATCH") return wrongMethod("PATCH");
 
 	const payload = await verifyAuth(req);
-	if (payload === null) return unauthenticated;
+	if (payload === null) return unauthenticated();
 
 	const uid = payload.uid as number;
 
-	if (req.body === null) return bodyRequired;
+	if (req.body === null) return bodyRequired();
 
 	let jsonObj: any = {};
 
 	try {
 		jsonObj = await req.json();
 	} catch (err) {
-		return malformedJson;
+		return malformedJson();
 	}
 
 	const parsedData = await trashRequest.safeParseAsync(jsonObj);
 	if (!parsedData.success) return requireBodyFields(parsedData.error.issues);
 
 	try {
-		const fp = `users/${uid}/${parsedData.data.path}`;
-		await sql`UPDATE files SET trashed = ${parsedData.data.trash} WHERE filepath = ${fp}`;
+		const fp = path.join("users", uid.toString(), parsedData.data.path);
+		await sql`UPDATE files SET trashed = ${parsedData.data.trash} WHERE virtual_path = ${fp}`;
 	} catch (err) {
 		console.error(err);
 		return internalServerError(
@@ -187,27 +206,34 @@ export async function trashRoute(req: BunRequest): Promise<Response> {
 		);
 	}
 
-	return ok;
+	return ok();
 }
 
 export async function listFilesRoute(
 	req: BunRequest<"/api/files/list/*">
 ): Promise<Response> {
-	if (req.method !== "GET") return wrongMethod;
+	switch (req.method) {
+		case "GET":
+			break;
+		case "OPTIONS":
+			return corsPreflightAuthRoute("OPTIONS, GET");
+		default:
+			return wrongMethod("OPTIONS, GET");
+	}
 
 	const payload = await verifyAuth(req);
-	if (payload === null) return unauthenticated;
+	if (payload === null) return unauthenticated();
 
 	const uid = payload.uid as number;
-	const rawPath = new URL(req.url).pathname.substring(15);
+	const rawPath = decodeURIComponent(new URL(req.url).pathname.substring(15));
 
 	try {
 		const folderPath = path.join("users", uid.toString(), rawPath);
 		const result =
-			await sql`SELECT id FROM files WHERE filepath = ${folderPath} LIMIT 1`;
+			await sql`SELECT id FROM files WHERE virtual_path = ${folderPath} LIMIT 1`;
 
 		if (result instanceof Array && result.length === 0) {
-			return notFound;
+			return notFound();
 		}
 
 		const [{ id }] = result;
@@ -219,14 +245,29 @@ export async function listFilesRoute(
 		const usrPrefix = path.join("users", uid.toString());
 
 		for (const file of fileResults) {
-			file.filepath = file.filepath.substring(usrPrefix.length);
-			files.push(file);
+			file.virtual_path = file.virtual_path.substring(usrPrefix.length);
+			files.push({
+				id: file.id,
+				filename: file.filename,
+				is_folder: file.is_folder,
+				parent_folder: file.parent_folder,
+				created: file.created,
+				updated: file.updated,
+				trashed: file.trashed,
+				id_users: file.id_users,
+				virtual_path: file.virtual_path,
+			});
 		}
 
-		return Response.json({
-			...okJson,
-			files,
-		});
+		return Response.json(
+			{
+				...okJson,
+				files,
+			},
+			{
+				headers: corsAllowOrigin,
+			}
+		);
 	} catch (err) {
 		console.error(err);
 		return internalServerError(
@@ -236,47 +277,49 @@ export async function listFilesRoute(
 }
 
 export async function moveFileRoute(req: BunRequest): Promise<Response> {
-	if (req.method !== "PATCH") return wrongMethod;
+	if (req.method !== "PATCH") return wrongMethod("PATCH");
 
 	const payload = await verifyAuth(req);
-	if (payload === null) return unauthenticated;
+	if (payload === null) return unauthenticated();
 
 	const uid = payload.uid as number;
 
-	if (req.body === null) return bodyRequired;
+	if (req.body === null) return bodyRequired();
 
 	let jsonObj: any = {};
 
 	try {
 		jsonObj = await req.json();
 	} catch (err) {
-		return malformedJson;
+		return malformedJson();
 	}
 
 	const parsedData = await moveFileRequest.safeParseAsync(jsonObj);
 	if (!parsedData.success) return requireBodyFields(parsedData.error.issues);
 
-	const targetFolder = path.join("users", uid.toString(), parsedData.data.to);
-	const result =
-		await sql`SELECT id FROM files WHERE filepath = ${targetFolder} LIMIT 1`;
+	const sourcePath = path.join("users", uid.toString(), parsedData.data.from);
 
-	if (result instanceof Array && result.length === 0) {
-		return Response.json({
-			status: 404,
-			dog: "https://http.dog/404",
-			message: "Target folder not found",
-		});
+	const sourceResult =
+		await sql`SELECT * FROM files WHERE virtual_path = ${sourcePath} LIMIT 1`;
+
+	if (sourceResult instanceof Array && sourceResult.length === 0) {
+		return notFoundMsg("Source file/folder not found.");
 	}
 
-	const { id } = result;
+	const [sourceFile] = sourceResult;
+
+	const targetFolder = path.join("users", uid.toString(), parsedData.data.to);
+	const newFolderResult =
+		await sql`SELECT id FROM files WHERE virtual_path = ${targetFolder} LIMIT 1`;
+
+	if (newFolderResult instanceof Array && newFolderResult.length === 0) {
+		return notFoundMsg("Target folder not found");
+	}
+
+	const [{ id }] = newFolderResult;
 
 	try {
-		const fromPath = path.join(
-			"users",
-			uid.toString(),
-			parsedData.data.from
-		);
-		await sql`UPDATE files SET parent_folder = ${id} WHERE filepath = ${fromPath}`;
+		await database.move(sourceFile, id, targetFolder);
 	} catch (err) {
 		console.error(err);
 		return internalServerError(
@@ -284,25 +327,25 @@ export async function moveFileRoute(req: BunRequest): Promise<Response> {
 		);
 	}
 
-	return ok;
+	return ok();
 }
 
 export async function copyFileRoute(req: BunRequest): Promise<Response> {
-	if (req.method !== "POST") return wrongMethod;
+	if (req.method !== "POST") return wrongMethod("POST");
 
 	const payload = await verifyAuth(req);
-	if (payload === null) return unauthenticated;
+	if (payload === null) return unauthenticated();
 
 	const uid = payload.uid as number;
 
-	if (req.body === null) return bodyRequired;
+	if (req.body === null) return bodyRequired();
 
 	let jsonObj: any = {};
 
 	try {
 		jsonObj = await req.json();
 	} catch (err) {
-		return malformedJson;
+		return malformedJson();
 	}
 
 	const parsedData = await copyFileRequest.safeParseAsync(jsonObj);
@@ -310,12 +353,13 @@ export async function copyFileRoute(req: BunRequest): Promise<Response> {
 
 	let originalFile: FileInfo;
 
+	// Query original file
 	try {
 		const result =
-			await sql`SELECT * FROM files WHERE id = ${parsedData.data.from}`;
+			await sql`SELECT * FROM files WHERE virtual_path = ${parsedData.data.from}`;
 
 		if (result instanceof Array && result.length === 0) {
-			return notFound;
+			return notFound();
 		}
 
 		[originalFile] = result;
@@ -326,14 +370,30 @@ export async function copyFileRoute(req: BunRequest): Promise<Response> {
 		);
 	}
 
+	let targetFolder: FileInfo;
+
+	// Query target folder
+	try {
+		// Return the virtual path to pass on to the database.copy method
+		const result =
+			await sql`SELECT id, virtual_path FROM files WHERE virtual_path = ${parsedData.data.from}`;
+
+		if (result instanceof Array && result.length === 0) {
+			return notFound();
+		}
+
+		[targetFolder] = result;
+	} catch (err) {
+		console.error(err);
+		return internalServerError(
+			"An error occurred while searching for the target folder"
+		);
+	}
+
 	let newFile: FileInfo;
 
 	try {
-		newFile = await database.copy(
-			originalFile,
-			parsedData.data.toFolder,
-			uid
-		);
+		newFile = await database.copy(originalFile, targetFolder, uid);
 	} catch (err) {
 		console.error(err);
 		return internalServerError(
@@ -348,5 +408,71 @@ export async function copyFileRoute(req: BunRequest): Promise<Response> {
 }
 
 export async function createFolderRoute(req: BunRequest): Promise<Response> {
-	return Response.json({});
+	switch (req.method) {
+		case "POST":
+			break;
+		case "OPTIONS":
+			return corsPreflightAuthRoute("OPTIONS, POST");
+		default:
+			return wrongMethod("OPTIONS, POST");
+	}
+
+	const payload = await verifyAuth(req);
+	if (payload === null) return unauthenticated();
+
+	const uid = payload.uid as number;
+
+	if (req.body === null) return bodyRequired();
+
+	let jsonObj: any = {};
+
+	try {
+		jsonObj = await req.json();
+	} catch (err) {
+		return malformedJson();
+	}
+
+	const parsedData = await targetFileRequest.safeParseAsync(jsonObj);
+	if (!parsedData.success) return requireBodyFields(parsedData.error.issues);
+
+	const folderPath = path.join("users", uid.toString(), parsedData.data.path);
+
+	let parentFolder = path.dirname(folderPath);
+
+	parentFolder += "/";
+
+	const parentResult = await sql`
+        SELECT id FROM files WHERE virtual_path = ${parentFolder}
+    `;
+
+	if (parentResult instanceof Array && parentResult.length === 0) {
+		return notFoundMsg("Parent folder not found");
+	}
+
+	const data: NewFileInfo = {
+		filename: path.basename(folderPath),
+		id_users: uid,
+		is_folder: true,
+		s3_path: folderPath,
+		virtual_path: folderPath,
+		parent_folder: parentResult[0].id,
+	};
+
+	try {
+		await sql`
+            INSERT INTO files ${sql(data)}
+        `;
+	} catch (err) {
+		console.error(err);
+		return internalServerError(
+			"An error occurred while creating the folder in database"
+		);
+	}
+
+	storage.createFolder({
+		owner: uid,
+		path: folderPath,
+	});
+
+	return ok();
 }

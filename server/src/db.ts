@@ -2,20 +2,23 @@ import { sql } from "bun";
 import * as path from "node:path";
 import { cryptoRandomString } from "./util/string";
 
-interface NewFileInfo {
+export interface NewFileInfo {
 	filename: string;
-	filepath: string;
+	s3_path?: string;
+	virtual_path: string;
 	is_folder: boolean;
 	/**
 	 * File owner user ID
 	 */
 	id_users: number;
+	parent_folder?: number;
 }
 
 export interface FileInfo {
 	id: number;
 	filename: string;
-	filepath: string;
+	virtual_path: string;
+	s3_path: string;
 	is_folder: boolean;
 	parent_folder: null | number;
 	created: Date;
@@ -34,17 +37,26 @@ abstract class Database {
 
 	abstract copy(
 		originalFile: FileInfo,
-		targetFolder: number,
+		targetFolder: FileInfo,
 		uid: number
 	): Promise<FileInfo>;
+
+	abstract move(
+		originalFile: FileInfo,
+		targetFolderId: number,
+		targetFolderPath: string
+	): Promise<void>;
+
+	abstract getRealPath(virtualPath: string): Promise<string>;
 }
 
 class PostgresDriver extends Database {
 	async newFile(info: NewFileInfo): Promise<FileInfo> {
-		const dir = path.dirname(info.filepath) + "/";
-		const ext = path.extname(info.filepath);
+		const dir = path.dirname(info.virtual_path) + "/";
+		const ext = path.extname(info.virtual_path);
 
-		const result = await sql`SELECT id FROM files WHERE filepath = ${dir}`;
+		const result =
+			await sql`SELECT id FROM files WHERE virtual_path = ${dir}`;
 		let id = null;
 
 		if (result instanceof Array && result.length > 0) {
@@ -52,8 +64,14 @@ class PostgresDriver extends Database {
 		}
 
 		const [newFile] = await sql`
-            INSERT INTO files (filename, filepath, is_folder, parent_folder, id_users)
-            VALUES (${info.filename}, ${dir} || currval('files_id_seq') || ${ext}, ${info.is_folder}, ${id}, ${info.id_users})
+            INSERT INTO files (filename, virtual_path, s3_path, is_folder, parent_folder, id_users)
+            VALUES (
+                ${info.filename}, 
+                ${dir} || currval('files_id_seq') || ${ext}, 
+                ${dir} || currval('files_id_seq') || ${ext}, 
+                ${info.is_folder}, 
+                ${id}, 
+                ${info.id_users})
             RETURNING *;
         `;
 
@@ -69,23 +87,24 @@ class PostgresDriver extends Database {
 
 	async copyFile(
 		originalFile: FileInfo,
-		targetFolder: number,
+		targetFolder: FileInfo,
 		uid: number
 	): Promise<FileInfo> {
 		let newName = path.parse(originalFile.filename);
 
-		if (originalFile.parent_folder === targetFolder) {
+		if (originalFile.parent_folder === targetFolder.id) {
 			// Generate something like "abc-Copy0ef8" instead of "abc-Copy2"
 			// because I don't want to count
 			newName.name += `-Copy${cryptoRandomString(4)}`;
 			newName.base = newName.name + newName.ext;
 		}
 
-		const data = {
+		const data: NewFileInfo = {
 			filename: newName.base,
-			filepath: originalFile.filepath,
+			virtual_path: path.join(targetFolder.virtual_path, newName.base),
+			s3_path: originalFile.s3_path,
 			is_folder: originalFile.is_folder,
-			parent_folder: targetFolder,
+			parent_folder: targetFolder.id,
 			id_users: uid,
 		};
 
@@ -99,7 +118,7 @@ class PostgresDriver extends Database {
 
 	async copyDirectory(
 		originalFile: FileInfo,
-		targetFolder: number,
+		targetFolder: FileInfo,
 		uid: number
 	): Promise<FileInfo> {
 		const contents = await this.listFiles(originalFile.id);
@@ -108,11 +127,11 @@ class PostgresDriver extends Database {
 
 		for (const file of contents) {
 			if (file.is_folder) {
-				await this.copyDirectory(file, newFolder.id, uid);
+				await this.copyDirectory(file, newFolder, uid);
 				continue;
 			}
 
-			await this.copyFile(file, newFolder.id, uid);
+			await this.copyFile(file, newFolder, uid);
 		}
 
 		return newFolder;
@@ -120,7 +139,7 @@ class PostgresDriver extends Database {
 
 	async copy(
 		originalFile: FileInfo,
-		targetFolder: number,
+		targetFolder: FileInfo,
 		uid: number
 	): Promise<FileInfo> {
 		if (originalFile.is_folder) {
@@ -128,6 +147,43 @@ class PostgresDriver extends Database {
 		}
 
 		return this.copyFile(originalFile, targetFolder, uid);
+	}
+
+	async moveFile(
+		originalFile: FileInfo,
+		targetFolderId: number,
+		targetFolderPath: string
+	) {
+		const fromPath = originalFile.virtual_path;
+		const newPath = path.join(targetFolderPath, originalFile.filename);
+
+		await sql`UPDATE files SET parent_folder = ${targetFolderId}, virtual_path = ${newPath} WHERE virtual_path = ${fromPath}`;
+	}
+
+	async moveDirectory(
+		originalFile: FileInfo,
+		targetFolderId: number,
+		targetFolderPath: string
+	) {}
+
+	async move(
+		originalFile: FileInfo,
+		targetFolderId: number,
+		targetFolderPath: string
+	): Promise<void> {
+		if (originalFile.is_folder) {
+			return this.moveDirectory(
+				originalFile,
+				targetFolderId,
+				targetFolderPath
+			);
+		}
+
+		return this.moveFile(originalFile, targetFolderId, targetFolderPath);
+	}
+
+	getRealPath(virtualPath: string): Promise<string> {
+		return sql`SELECT s3_path FROM files WHERE virtual_path = ${virtualPath}`;
 	}
 }
 

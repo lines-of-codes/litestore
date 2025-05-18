@@ -12,7 +12,7 @@ import {
 	createFolderRoute,
 } from "./src/routes/files";
 import { publicUserInfoRoute } from "./src/routes/user";
-import { notFound, ok } from "./src/routes/responses";
+import { internalServerError, notFound, ok } from "./src/routes/responses";
 import {
 	createFileLinkRoute,
 	fileLinkInfoRoute,
@@ -45,6 +45,10 @@ const server = Bun.serve({
 	},
 	fetch() {
 		return notFound;
+	},
+	error(error) {
+		console.error(error);
+		return internalServerError("An unhandled and unknown error occurred.");
 	},
 });
 
