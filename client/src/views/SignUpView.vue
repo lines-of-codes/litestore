@@ -10,7 +10,7 @@ const password = ref("");
 const passwordConfirm = ref("");
 
 async function handleSubmit() {
-    if (password !== passwordConfirm) {
+    if (password.value !== passwordConfirm.value) {
         alert("The password and the password confirmation don't match.");
         return;
     }

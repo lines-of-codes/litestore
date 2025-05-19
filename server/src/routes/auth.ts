@@ -52,6 +52,7 @@ export async function signUpRoute(req: BunRequest): Promise<Response> {
 				},
 				{
 					status: 400,
+					headers: corsAllowOrigin,
 				}
 			);
 		}
@@ -81,11 +82,12 @@ export async function signUpRoute(req: BunRequest): Promise<Response> {
 		const rootFile: NewFileInfo = {
 			filename: id.toString(),
 			virtual_path: `users/${id}/`,
+			s3_path: `users/${id}/`,
 			is_folder: true,
 			id_users: id,
 		};
 
-		await database.newFile(rootFile);
+		await sql`INSERT INTO files ${sql(rootFile)}`;
 	} catch (err) {
 		console.error(err);
 		return internalServerError("An error occurred while updating database");
@@ -107,6 +109,7 @@ export async function signUpRoute(req: BunRequest): Promise<Response> {
 		},
 		{
 			status: 201,
+			headers: corsAllowOrigin,
 		}
 	);
 }
