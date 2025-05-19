@@ -11,12 +11,14 @@ import {
 	notFound,
 	okJson,
 	notFoundMsg,
+	acceptedIntoQueue,
 } from "./responses";
 import { z } from "zod";
 import { verifyAuth } from "./auth";
 import { storage } from "../storage";
 import { database, type FileInfo, type NewFileInfo } from "../db";
 import { corsAllowOrigin, corsPreflightAuthRoute } from "../util/cors";
+import { addToProcessingQueue, processingState } from "../util/processingQueue";
 
 const uploadInfo = z.object({
 	path: z.string(),
@@ -67,7 +69,14 @@ interface ClientFileInfo {
 }
 
 export async function uploadRoute(req: BunRequest): Promise<Response> {
-	if (req.method !== "POST") return wrongMethod("POST");
+	switch (req.method) {
+		case "POST":
+			break;
+		case "OPTIONS":
+			return corsPreflightAuthRoute("OPTIONS, POST");
+		default:
+			return wrongMethod("OPTIONS, POST");
+	}
 
 	const payload = await verifyAuth(req);
 	if (payload === null) return unauthenticated();
@@ -90,13 +99,12 @@ export async function uploadRoute(req: BunRequest): Promise<Response> {
 
 	const newFile = await database.newFile({
 		filename: path.basename(parsedData.data.path),
-		virtual_path: parsedData.data.path,
+		virtual_path: path.join("users", uid.toString(), parsedData.data.path),
 		is_folder: false,
 		id_users: uid,
 	});
 
 	const uploadInstruction = await storage.uploadLink({
-		owner: uid as number,
 		path: newFile.s3_path,
 		size: parsedData.data.size,
 	});
@@ -109,6 +117,7 @@ export async function uploadRoute(req: BunRequest): Promise<Response> {
 		},
 		{
 			status: 201,
+			headers: corsAllowOrigin,
 		}
 	);
 }
@@ -137,7 +146,14 @@ export async function downloadRoute(req: BunRequest): Promise<Response> {
 }
 
 export async function deleteRoute(req: BunRequest): Promise<Response> {
-	if (req.method !== "DELETE") return wrongMethod("DELETE");
+	switch (req.method) {
+		case "DELETE":
+			break;
+		case "OPTIONS":
+			return corsPreflightAuthRoute("OPTIONS, DELETE");
+		default:
+			return wrongMethod("DELETE");
+	}
 
 	const payload = await verifyAuth(req);
 	if (payload === null) return unauthenticated();
@@ -157,22 +173,58 @@ export async function deleteRoute(req: BunRequest): Promise<Response> {
 	const parsedData = await targetFileRequest.safeParseAsync(jsonObj);
 	if (!parsedData.success) return requireBodyFields(parsedData.error.issues);
 
+	const fp = path.join("users", uid.toString(), parsedData.data.path);
+	let recursiveDelete = false;
+	let deletionTargets: number[] = [];
+
 	try {
-		const fp = path.join("users", uid.toString(), parsedData.data.path);
-		await sql`DELETE FROM files WHERE virtual_path = ${fp}`;
+		let result =
+			await sql`SELECT id, is_folder FROM files WHERE virtual_path = ${fp}`;
+
+		if (result instanceof Array && result.length === 0) {
+			return notFoundMsg("File/Folder not found.");
+		}
+
+		const [{ id, is_folder }] = result;
+
+		if (is_folder) {
+			result =
+				await sql`SELECT id FROM files WHERE parent_folder = ${id}`;
+
+			if (result instanceof Array && result.length > 0) {
+				recursiveDelete = true;
+				deletionTargets = result.map((v: { id: number }) => v.id);
+			}
+		}
+
+		deletionTargets.push(id);
 	} catch (err) {
 		console.error(err);
 		return internalServerError(
-			"An error occurred while the file's metadata is being deleted"
+			"An error occurred while searching for the file"
 		);
 	}
 
-	await storage.deleteFile({
-		owner: uid,
-		path: parsedData.data.path,
-	});
+	try {
+		const s3_paths = await sql`DELETE FROM files WHERE id IN ${sql(
+			deletionTargets
+		)} RETURNING s3_path`;
 
-	return ok();
+		const stateIndex = addToProcessingQueue(async (stateIndex) => {
+			for (const path in s3_paths) {
+				await storage.deleteFile({
+					owner: uid,
+					path,
+				});
+			}
+			processingState[stateIndex] = true;
+		}, false);
+
+		return acceptedIntoQueue(stateIndex);
+	} catch (err) {
+		console.error(err);
+		return internalServerError("An error occurred while deleting the file");
+	}
 }
 
 export async function trashRoute(req: BunRequest): Promise<Response> {

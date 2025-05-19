@@ -1,18 +1,21 @@
 {
-	"name": "litestore-server",
-	"module": "index.ts",
-	"type": "module",
-	"private": true,
-	"devDependencies": {
-		"@types/bun": "latest"
-	},
-	"peerDependencies": {
-		"typescript": "^5.8.3"
-	},
-	"dependencies": {
-		"@aws-sdk/client-s3": "^3.812.0",
-		"@aws-sdk/s3-request-presigner": "^3.812.0",
-		"@panva/jose": "npm:@jsr/panva__jose",
-		"zod": "^3.24.4"
-	}
+    "name": "litestore-server",
+    "module": "index.ts",
+    "type": "module",
+    "private": true,
+    "scripts": {
+        "compile": "bun build ./index.ts --compile --minify --sourcemap --outfile litestore-server --env=INLINE_\\*"
+    },
+    "devDependencies": {
+        "@types/bun": "latest"
+    },
+    "peerDependencies": {
+        "typescript": "^5.8.3"
+    },
+    "dependencies": {
+        "@aws-sdk/client-s3": "^3.812.0",
+        "@aws-sdk/s3-request-presigner": "^3.812.0",
+        "@panva/jose": "npm:@jsr/panva__jose",
+        "zod": "^3.24.4"
+    }
 }

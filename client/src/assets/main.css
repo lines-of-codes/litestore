@@ -1,0 +1,42 @@
+@import "./base.css";
+@import "bootstrap-icons/font/bootstrap-icons.min.css";
+
+.text-input {
+    @apply border border-theme hover:border-theme-hover outline-none rounded px-2 py-1 bg-theme-soft text-theme;
+
+    &::placeholder {
+        @apply text-gray-400;
+    }
+}
+
+.btn {
+    @apply px-2 py-1 rounded bg-gray-100 dark:bg-slate-700 cursor-pointer transition-colors border border-theme text-theme;
+
+    &:hover {
+        @apply bg-gray-200 dark:bg-slate-600 border-theme-hover;
+    }
+}
+
+.btn-lg {
+    @apply px-4 py-2 rounded bg-gray-100 dark:bg-slate-700 cursor-pointer transition-colors border border-theme;
+
+    &:hover {
+        @apply bg-gray-200 dark:bg-slate-600 border-theme-hover;
+    }
+}
+
+.dropdown-menu-btn {
+    @apply px-2 py-1 cursor-pointer transition-colors block text-left;
+
+    &:hover {
+        @apply bg-gray-200 dark:bg-slate-600;
+    }
+}
+
+.icon-btn {
+    @apply px-2 py-1 rounded cursor-pointer transition-colors hover:bg-gray-200 hover:dark:bg-slate-600;
+}
+
+.link {
+    @apply underline transition-colors hover:text-blue-800 dark:hover:text-blue-300;
+}

@@ -11,6 +11,25 @@ To configure S3 and PostgreSQL, Create a `.env` file and refer to Bun's
 documentation on setting credentials. \([S3](https://bun.sh/docs/api/s3#credentials),
 [PostgreSQL](https://bun.sh/docs/api/sql#database-environment-variables)\)
 
+A `.env.template` file has been provided due to the excessive use of environmental
+variables.
+
+```ini
+S3_ENDPOINT=
+S3_REGION=
+S3_BUCKET=litestore
+S3_ACCESS_KEY_ID=
+S3_SECRET_ACCESS_KEY=
+
+PGUSERNAME=litestore
+PGPASSWORD=
+
+CORS_ALLOW_ORIGIN=http://localhost:5173
+API_PORT=3000
+```
+
+I believe the key names are pretty self-explanatory.
+
 Any S3-compatible storage solution should work, But litestore is designed
 around [Garage](https://garagehq.deuxfleurs.fr/)
 

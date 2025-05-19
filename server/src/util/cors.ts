@@ -14,6 +14,7 @@ export function corsPreflightAuthRoute(methods: string) {
 		headers: {
 			...corsAllowOrigin,
 			"Access-Control-Allow-Headers": "Authorization",
+			"Access-Control-Allow-Methods": methods,
 			Allow: methods,
 		},
 	});

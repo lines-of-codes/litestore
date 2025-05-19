@@ -12,6 +12,20 @@ export const ok = () =>
 		headers: corsAllowOrigin,
 	});
 
+export const acceptedIntoQueue = (queueIndex: number) =>
+	Response.json(
+		{
+			status: 202,
+			dog: "https://http.dog/202",
+			message: "Request Accepted",
+			id: queueIndex,
+		},
+		{
+			status: 202,
+			headers: corsAllowOrigin,
+		}
+	);
+
 /**
  * Returns HTTP 405 Method not allowed
  */

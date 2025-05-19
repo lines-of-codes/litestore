@@ -19,7 +19,8 @@ interface FileLocation {
 	path: string;
 }
 
-interface UploadInfo extends FileLocation {
+interface UploadInfo {
+	path: string;
 	/**
 	 * The file size in bytes
 	 */
@@ -124,7 +125,7 @@ export class S3Driver extends Storage {
 
 	async uploadLink(file: UploadInfo): Promise<UploadInstructions> {
 		const mib = bytesToMebibytes(file.size);
-		const filePath = this.getPath(file);
+		const filePath = file.path;
 
 		// File can fit in a single part
 		if (mib < defaultPartSize) {

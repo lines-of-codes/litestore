@@ -12,7 +12,12 @@ import {
 	createFolderRoute,
 } from "./src/routes/files";
 import { publicUserInfoRoute } from "./src/routes/user";
-import { internalServerError, notFound, ok } from "./src/routes/responses";
+import {
+	internalServerError,
+	notFound,
+	ok,
+	okJson,
+} from "./src/routes/responses";
 import {
 	createFileLinkRoute,
 	fileLinkInfoRoute,
@@ -25,9 +30,14 @@ await loadConfig(true);
 await prepareJwtSecret();
 
 const server = Bun.serve({
-	port: 3000,
+	port: process.env.API_PORT,
 	routes: {
-		"/api/status": ok,
+		"/api/status": Response.json({
+			...okJson,
+			bunVersion: Bun.version,
+			// Declared in `.env`, inlined at build time
+			serverVersion: process.env.INLINE_API_SERVER_VERSION,
+		}),
 		"/api/auth/signup": signUpRoute,
 		"/api/auth/login": loginRoute,
 		"/api/files/upload": uploadRoute,
@@ -44,7 +54,7 @@ const server = Bun.serve({
 		"/api/user/:username": publicUserInfoRoute,
 	},
 	fetch() {
-		return notFound;
+		return notFound();
 	},
 	error(error) {
 		console.error(error);
