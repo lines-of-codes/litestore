@@ -100,6 +100,7 @@ function handleDeleteButton(filePath: string) {
 }
 
 function handleUploadButton() {
+    createMenuDropdown?.hide();
     var fileInput = document.createElement("input");
     fileInput.type = "file";
 
