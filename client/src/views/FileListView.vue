@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import CreateFolderDialog from '@/components/CreateFolderDialog.vue';
 import LocationBar from '@/components/LocationBar.vue';
-import { deleteFile, listFile, uploadFile, type FileInfo } from '@/lib/files';
+import { deleteFile, downloadFile, listFile, uploadFile, type FileInfo } from '@/lib/files';
 import { getFileIcon } from '@/util/fileIcon';
 import { Dropdown } from 'flowbite';
 import { onMounted, ref, useTemplateRef, watch, type Ref } from 'vue';
@@ -129,6 +129,18 @@ function handleUploadButton() {
 
     fileInput.click();
 }
+
+async function handleDownloadButton(filePath: string) {
+    try {
+        await downloadFile(filePath);
+    } catch (err) {
+        console.error(err);
+
+        if (err instanceof Error) {
+            alert(err.message);
+        }
+    }
+}
 </script>
 
 <template>
@@ -165,8 +177,8 @@ function handleUploadButton() {
                     {{ file.filename }}
                 </RouterLink>
                 <div class="actions px-2">
-                    <button class="icon-btn" v-show="!file.is_folder" aria-label="Download"><i
-                            class="bi bi-download"></i></button>
+                    <button class="icon-btn" v-show="!file.is_folder" aria-label="Download"><i class="bi bi-download"
+                            @click="handleDownloadButton(file.virtual_path)"></i></button>
                     <button class="icon-btn" aria-label="Trash" @click="() => handleDeleteButton(file.virtual_path)"><i
                             class="bi bi-trash"></i></button>
                 </div>

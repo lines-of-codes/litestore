@@ -111,16 +111,8 @@ export class S3Driver extends Storage {
 		return objects.contents.map((v) => v.key);
 	}
 
-	downloadLink(file: FileLocation | string): string {
-		let filePath: string = "";
-
-		if (file instanceof Object) {
-			filePath = this.getPath(file);
-		} else {
-			filePath = file;
-		}
-
-		return this.s3.presign(filePath);
+	downloadLink(file: string): string {
+		return this.s3.presign(file);
 	}
 
 	async uploadLink(file: UploadInfo): Promise<UploadInstructions> {

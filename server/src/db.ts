@@ -182,8 +182,11 @@ class PostgresDriver extends Database {
 		return this.moveFile(originalFile, targetFolderId, targetFolderPath);
 	}
 
-	getRealPath(virtualPath: string): Promise<string> {
-		return sql`SELECT s3_path FROM files WHERE virtual_path = ${virtualPath}`;
+	async getRealPath(virtualPath: string): Promise<string> {
+		const [{ s3_path }] =
+			await sql`SELECT s3_path FROM files WHERE virtual_path = ${virtualPath}`;
+
+		return s3_path;
 	}
 }
 

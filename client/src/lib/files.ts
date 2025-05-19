@@ -110,3 +110,20 @@ export async function uploadFile(path: string, file: File) {
         nextByte += size;
     }
 }
+
+export async function downloadFile(path: string) {
+    const resp = await fetch(
+        `${import.meta.env.VITE_LS_API}/api/files/download${path}`,
+        {
+            headers: authHeader(),
+        },
+    );
+
+    const jsonData = await resp.json();
+
+    if (!resp.ok) {
+        throw Error(`ERR ${resp.status}: ${jsonData.message}`);
+    }
+
+    window.open(jsonData.url, "_blank")?.focus();
+}

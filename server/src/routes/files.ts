@@ -123,7 +123,14 @@ export async function uploadRoute(req: BunRequest): Promise<Response> {
 }
 
 export async function downloadRoute(req: BunRequest): Promise<Response> {
-	if (req.method !== "GET") return wrongMethod("GET");
+	switch (req.method) {
+		case "OPTIONS":
+			return corsPreflightAuthRoute("OPTIONS, GET");
+		case "GET":
+			break;
+		default:
+			return wrongMethod("OPTIONS, GET");
+	}
 
 	const payload = await verifyAuth(req);
 	if (payload === null) return unauthenticated();
@@ -138,11 +145,16 @@ export async function downloadRoute(req: BunRequest): Promise<Response> {
 		)
 	);
 
-	return Response.json({
-		status: 200,
-		dog: "https://http.dog/200",
-		url,
-	});
+	return Response.json(
+		{
+			status: 200,
+			dog: "https://http.dog/200",
+			url,
+		},
+		{
+			headers: corsAllowOrigin,
+		}
+	);
 }
 
 export async function deleteRoute(req: BunRequest): Promise<Response> {
