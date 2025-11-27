@@ -1,3 +1,4 @@
+import { getLogger } from "@logtape/logtape";
 import { sql, type BunRequest } from "bun";
 import * as path from "node:path";
 import {
@@ -19,6 +20,8 @@ import { storage } from "../storage";
 import { database, type FileInfo, type NewFileInfo } from "../db";
 import { corsAllowOrigin, corsPreflightAuthRoute } from "../util/cors";
 import { addToProcessingQueue, processingState } from "../util/processingQueue";
+
+const logger = getLogger("litestore");
 
 const uploadInfo = z.object({
 	path: z.string(),
@@ -211,7 +214,10 @@ export async function deleteRoute(req: BunRequest): Promise<Response> {
 
 		deletionTargets.push(id);
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError(
 			"An error occurred while searching for the file"
 		);
@@ -234,7 +240,10 @@ export async function deleteRoute(req: BunRequest): Promise<Response> {
 
 		return acceptedIntoQueue(stateIndex);
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError("An error occurred while deleting the file");
 	}
 }
@@ -264,7 +273,10 @@ export async function trashRoute(req: BunRequest): Promise<Response> {
 		const fp = path.join("users", uid.toString(), parsedData.data.path);
 		await sql`UPDATE files SET trashed = ${parsedData.data.trash} WHERE virtual_path = ${fp}`;
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError(
 			"An error occurred while modifying the file's metadata"
 		);
@@ -333,7 +345,10 @@ export async function listFilesRoute(
 			}
 		);
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError(
 			"An error occurred while searching for the files"
 		);
@@ -385,7 +400,10 @@ export async function moveFileRoute(req: BunRequest): Promise<Response> {
 	try {
 		await database.move(sourceFile, id, targetFolder);
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError(
 			"An error occurred while updating the file's folder"
 		);
@@ -428,7 +446,10 @@ export async function copyFileRoute(req: BunRequest): Promise<Response> {
 
 		[originalFile] = result;
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError(
 			"An error occurred while searching for the original file"
 		);
@@ -448,7 +469,10 @@ export async function copyFileRoute(req: BunRequest): Promise<Response> {
 
 		[targetFolder] = result;
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError(
 			"An error occurred while searching for the target folder"
 		);
@@ -459,7 +483,10 @@ export async function copyFileRoute(req: BunRequest): Promise<Response> {
 	try {
 		newFile = await database.copy(originalFile, targetFolder, uid);
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError(
 			"An error occurred while copying the file(s)"
 		);
@@ -527,7 +554,10 @@ export async function createFolderRoute(req: BunRequest): Promise<Response> {
             INSERT INTO files ${sql(data)}
         `;
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError(
 			"An error occurred while creating the folder in database"
 		);

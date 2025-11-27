@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CreateFolderDialog from '@/components/CreateFolderDialog.vue';
 import LocationBar from '@/components/LocationBar.vue';
+import { resetToken } from '@/lib/auth';
 import { deleteFile, downloadFile, listFile, uploadFile, type FileInfo } from '@/lib/files';
 import { getFileIcon } from '@/util/fileIcon';
 import { Dropdown } from 'flowbite';
@@ -36,6 +37,11 @@ async function fetchFileList(targetPath: string) {
         console.error(err);
         if (err instanceof Error) {
             errMsg.value = err.message;
+
+            if (err.message.startsWith("ERR 401")) {
+                resetToken();
+                window.location.href = "/login";
+            }
         }
     }
 }
@@ -101,7 +107,7 @@ function handleDeleteButton(filePath: string) {
 
 function handleUploadButton() {
     createMenuDropdown?.hide();
-    var fileInput = document.createElement("input");
+    const fileInput = document.createElement("input");
     fileInput.type = "file";
 
     fileInput.onchange = async e => {
@@ -203,5 +209,11 @@ async function handleDownloadButton(filePath: string) {
 
 .file-entry:hover>.actions {
     opacity: 255;
+}
+
+@media (hover: none) {
+    .file-entry>.actions {
+        opacity: 255;
+    }
 }
 </style>

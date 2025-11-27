@@ -1,3 +1,4 @@
+import { getLogger } from "@logtape/logtape";
 import { sql, type BunRequest } from "bun";
 import {
 	internalServerError,
@@ -10,8 +11,10 @@ import { config } from "../config";
 import { signJwt, verifyJwt } from "../jwt";
 import { storage } from "../storage";
 import type { JWTPayload } from "@panva/jose";
-import { database, type NewFileInfo } from "../db";
+import { type NewFileInfo } from "../db";
 import { corsAllowOrigin } from "../util/cors";
+
+const logger = getLogger("litestore");
 
 const signUpInfo = z.object({
 	email: z.string().email(),
@@ -57,7 +60,10 @@ export async function signUpRoute(req: BunRequest): Promise<Response> {
 			);
 		}
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 	}
 
 	const data = {
@@ -89,7 +95,10 @@ export async function signUpRoute(req: BunRequest): Promise<Response> {
 
 		await sql`INSERT INTO files ${sql(rootFile)}`;
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError("An error occurred while updating database");
 	}
 
@@ -99,7 +108,11 @@ export async function signUpRoute(req: BunRequest): Promise<Response> {
 			path: "",
 		});
 	} catch (err) {
-		console.log(err);
+		if (err instanceof Error) {
+			logger.error(err.toString());
+		} else {
+			console.error(err);
+		}
 	}
 
 	return Response.json(
@@ -130,7 +143,12 @@ export async function loginRoute(req: BunRequest): Promise<Response> {
             SELECT id, password FROM users WHERE username = ${parsedData.data.username} LIMIT 1
         `;
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error) {
+			logger.error(err.toString());
+		} else {
+			console.error(err);
+		}
+		
 		return internalServerError(
 			"An error occurred while searching for the user"
 		);
@@ -163,7 +181,11 @@ export async function loginRoute(req: BunRequest): Promise<Response> {
 			try {
 				await sql`UPDATE users SET last_login = current_timestamp WHERE id = ${id}`;
 			} catch (err) {
-				console.error(err);
+				if (err instanceof Error) {
+					logger.error(err.toString());
+				} else {
+					console.error(err);
+				}
 			}
 
 			return Response.json(
@@ -191,7 +213,10 @@ export async function loginRoute(req: BunRequest): Promise<Response> {
 			}
 		);
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError(
 			"An error occurred while verifying the password."
 		);

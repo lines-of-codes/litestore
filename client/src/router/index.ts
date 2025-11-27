@@ -29,6 +29,10 @@ const router = createRouter({
             name: "about",
             component: () => import("../views/AboutView.vue"),
         },
+        {
+            path: "/links/:uuid",
+            component: () => import("../views/FileLinkView.vue"),
+        },
     ],
 });
 

@@ -16,7 +16,7 @@ if (typeof (path) === "string") {
 }
 
 function generateSegments(pathSegments: string[]) {
-    let arr = [
+    const arr = [
         {
             name: "Home",
             link: "/files/"

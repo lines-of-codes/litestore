@@ -1,3 +1,5 @@
+const AUTH_TOKEN_KEY = "ls-auth-token";
+
 export function login(username: string, password: string): Promise<Response> {
     return fetch(`${import.meta.env.VITE_LS_API}/api/auth/login`, {
         method: "POST",
@@ -20,5 +22,9 @@ export function signUp(email: string, username: string, password: string) {
 }
 
 export function getToken() {
-    return localStorage.getItem("ls-auth-token");
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export function resetToken() {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
 }

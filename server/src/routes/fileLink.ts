@@ -1,3 +1,4 @@
+import { getLogger } from "@logtape/logtape";
 import { sql, type BunRequest } from "bun";
 import { z } from "zod";
 import { storage } from "../storage";
@@ -15,7 +16,9 @@ import {
 	invalidUrlParameter,
 } from "./responses";
 import * as path from "node:path";
-import { corsPreflightAuthRoute } from "../util/cors";
+import { corsAllowOrigin, corsPreflightAuthRoute } from "../util/cors";
+
+const logger = getLogger("litestore");
 
 const createLinkRequest = z.object({
 	path: z.string(),
@@ -92,7 +95,10 @@ export async function createFileLinkRoute(req: BunRequest): Promise<Response> {
 			}
 		);
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError(
 			"An error occurred while creating the file link"
 		);
@@ -115,13 +121,18 @@ export async function getFileLinkInfoRoute(shareId: string): Promise<Response> {
 
 	if (trashed) return notFound();
 
-	return Response.json({
-		status: 200,
-		dog: "https://http.dog/200",
-		filename,
-		passwordProtected: password != null,
-		downloadCount: download_count,
-	});
+	return Response.json(
+		{
+			status: 200,
+			dog: "https://http.dog/200",
+			filename,
+			passwordProtected: password != null,
+			downloadCount: download_count,
+		},
+		{
+			headers: corsAllowOrigin,
+		}
+	);
 }
 
 export async function patchFileLinkInfoRoute(
@@ -166,7 +177,10 @@ export async function patchFileLinkInfoRoute(
 	try {
 		await sql`UPDATE file_links SET ${data} WHERE id = ${req.params.shareId} AND created_by = ${uid}`;
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError(
 			"An error occurred while updating link settings"
 		);
@@ -198,7 +212,10 @@ export async function deleteFileLinkInfoRoute(
 	try {
 		await sql`DELETE FROM file_links WHERE id = ${shareId}`;
 	} catch (err) {
-		console.error(err);
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
 		return internalServerError(
 			"An error occurred while deleting the file link"
 		);
@@ -296,10 +313,15 @@ export async function downloadPublicFileRoute(
 
 	const url = storage.downloadLink(fileLink.s3_path);
 
-	return Response.json({
-		name: fileLink.filename,
-		status: 200,
-		dog: "https://http.dog/200",
-		url,
-	});
+	return Response.json(
+		{
+			name: fileLink.filename,
+			status: 200,
+			dog: "https://http.dog/200",
+			url,
+		},
+		{
+			headers: corsAllowOrigin,
+		}
+	);
 }
