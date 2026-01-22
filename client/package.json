@@ -13,29 +13,29 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.1.13",
+    "@tailwindcss/vite": "^4.1.18",
     "bootstrap-icons": "^1.13.1",
     "flowbite": "^3.1.2",
-    "tailwindcss": "^4.1.13",
-    "vue": "^3.5.21",
-    "vue-router": "^4.5.1"
+    "tailwindcss": "^4.1.18",
+    "vue": "^3.5.27",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "@tsconfig/node22": "^22.0.2",
-    "@types/node": "^22.18.5",
+    "@tsconfig/node22": "^22.0.5",
+    "@types/node": "^22.19.7",
     "@vitejs/plugin-vue": "^5.2.4",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/tsconfig": "^0.7.0",
-    "eslint": "^9.35.0",
+    "eslint": "^9.39.2",
     "eslint-plugin-vue": "~10.0.1",
-    "jiti": "^2.5.1",
+    "jiti": "^2.6.1",
     "npm-run-all2": "^7.0.2",
     "prettier": "3.5.3",
     "typescript": "~5.8.3",
-    "vite": "^6.3.6",
-    "vite-plugin-vue-devtools": "^7.7.7",
+    "vite": "^6.4.1",
+    "vite-plugin-vue-devtools": "^7.7.9",
     "vue-tsc": "^2.2.12"
   },
-  "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a"
+  "packageManager": "pnpm@10.28.1+sha512.7d7dbbca9e99447b7c3bf7a73286afaaf6be99251eb9498baefa7d406892f67b879adb3a1d7e687fc4ccc1a388c7175fbaae567a26ab44d1067b54fcb0d6a316"
 }
