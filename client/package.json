@@ -13,21 +13,21 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.1.18",
+    "@tailwindcss/vite": "^4.2.1",
     "bootstrap-icons": "^1.13.1",
     "flowbite": "^3.1.2",
-    "tailwindcss": "^4.1.18",
-    "vue": "^3.5.27",
+    "tailwindcss": "^4.2.1",
+    "vue": "^3.5.29",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.5",
-    "@types/node": "^22.19.7",
+    "@types/node": "^22.19.11",
     "@vitejs/plugin-vue": "^5.2.4",
     "@vue/eslint-config-prettier": "^10.2.0",
-    "@vue/eslint-config-typescript": "^14.6.0",
+    "@vue/eslint-config-typescript": "^14.7.0",
     "@vue/tsconfig": "^0.7.0",
-    "eslint": "^9.39.2",
+    "eslint": "^9.39.3",
     "eslint-plugin-vue": "~10.0.1",
     "jiti": "^2.6.1",
     "npm-run-all2": "^7.0.2",
