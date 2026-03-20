@@ -4,22 +4,30 @@ import "@/styles/generic.css";
 ---
 
 <BasicLayout>
-	<main>
-		<h1>litestore</h1>
-		<p>A fast and self-hostable file storage platform.</p>
-		<div>
-			<a href="/litestore/docs/" class="btn">View Docs</a>
-		</div>
-	</main>
+	<div class="container">
+		<main>
+			<h1>litestore</h1>
+			<p>A fast and self-hostable file storage platform.</p>
+			<div>
+				<a href="/litestore/docs/" class="btn">View Docs</a>
+			</div>
+		</main>
+		<footer>Built with {Astro.generator}</footer>
+	</div>
 </BasicLayout>
 
 <style>
-	main {
+	.container {
 		height: 100vh;
 		padding: 0 5vw;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
 		gap: 0.5em;
+	}
+
+	footer {
+		padding-top: 16px;
+		color: gray;
 	}
 </style>
