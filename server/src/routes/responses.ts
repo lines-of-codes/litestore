@@ -122,6 +122,7 @@ export const unauthenticated = () =>
 			status: 401,
 			headers: {
 				"WWW-Authenticate": "Bearer",
+                ...corsAllowOrigin
 			},
 		}
 	);

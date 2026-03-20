@@ -2,7 +2,7 @@
 @import "bootstrap-icons/font/bootstrap-icons.min.css";
 
 .text-input {
-    @apply border border-theme hover:border-theme-hover outline-none rounded px-2 py-1 bg-theme-soft text-theme;
+    @apply border border-theme hover:border-theme-hover outline-none rounded px-2 py-1 bg-theme-soft text-theme user-invalid:border-red-600! user-invalid:border-2;
 
     &::placeholder {
         @apply text-gray-400;

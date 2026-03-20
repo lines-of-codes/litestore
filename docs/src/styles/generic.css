@@ -67,5 +67,6 @@ th {
 blockquote {
 	background: #303040;
 	border-left: 3px solid #404050;
-	padding: 1px 6px 1px 8px;
+	padding: 1px 16px;
+	margin: 0;
 }
