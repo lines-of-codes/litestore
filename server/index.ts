@@ -35,6 +35,7 @@ await configure({
         }),
     },
     loggers: [
+        { category: ["logtape", "meta"], lowestLevel: "warning", sinks: ["file"] },
         { category: "litestore", lowestLevel: "debug", sinks: ["console", "file"] },
     ]
 });

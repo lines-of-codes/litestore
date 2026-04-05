@@ -29,8 +29,8 @@ This route requires the file path to be specified in the URL.
 
 Some examples include:
 
--   `http://localhost:3000/api/files/download/4.jpg`
--   `http://localhost:3000/api/files/download/Images/4.jpg`
+- `http://localhost:3000/api/files/download/4.jpg`
+- `http://localhost:3000/api/files/download/Images/4.jpg`
 
 ## Response
 
@@ -43,6 +43,7 @@ and 405 (Method Not Allowed)
 {
     "status": 200,
     "dog": "https://http.dog/200",
+    "filename": "filename.txt",
     "url": "link to download the file from S3"
 }
 ```

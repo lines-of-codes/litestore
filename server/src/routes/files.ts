@@ -140,18 +140,40 @@ export async function downloadRoute(req: BunRequest): Promise<Response> {
 
 	const uid = payload.uid as number;
 
-	const virtualPath = new URL(req.url).pathname.substring(19);
+	const rawPath = new URL(req.url).pathname.substring(19);
+    const virtualPath = path.join("users", uid.toString(), rawPath);
 
 	const url = storage.downloadLink(
 		await database.getRealPath(
-			path.join("users", uid.toString(), virtualPath)
+			virtualPath
 		)
 	);
+
+    let filename: string;
+    try {
+		const result =
+			await sql`SELECT filename FROM files WHERE virtual_path = ${virtualPath}`;
+
+        if (result instanceof Array && result.length === 0) {
+            return notFoundMsg("File not found");
+        }
+
+        [{filename}] = result;
+	} catch (err) {
+		if (err instanceof Error)
+			logger.error(err.toString());
+		else
+			console.error(err);
+		return internalServerError(
+			"An error occurred while searching for the file"
+		);
+	}
 
 	return Response.json(
 		{
 			status: 200,
 			dog: "https://http.dog/200",
+            filename,
 			url,
 		},
 		{
