@@ -7,6 +7,7 @@ interface FolderEntry {
     link: string;
 }
 
+const props = defineProps(["filename"]);
 const route = useRoute();
 const sections = ref([] as FolderEntry[]);
 let path = route.params.path;
@@ -29,6 +30,11 @@ function generateSegments(pathSegments: string[]) {
         }
 
         let link = "/files/";
+        const lastSegment = i === pathSegments.length - 1;
+
+        if (props.filename !== null && lastSegment) {
+            link += "view/";
+        }
 
         for (let j = 0; j <= i; j++) {
             link += pathSegments[j];
@@ -36,7 +42,7 @@ function generateSegments(pathSegments: string[]) {
         }
 
         arr.push({
-            name: pathSegments[i],
+            name: lastSegment ? props.filename ?? pathSegments[i] : pathSegments[i],
             link,
         });
     }
@@ -51,6 +57,10 @@ watch(() => route.params.path, (newPath, oldPath) => {
 
     generateSegments(newPath);
 });
+
+watch(() => props.filename, (newName, oldName) => {
+    generateSegments(path);
+})
 
 generateSegments(path);
 </script>

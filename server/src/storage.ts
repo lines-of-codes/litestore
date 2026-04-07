@@ -50,7 +50,7 @@ abstract class Storage {
 	 * Gets the download link. This link may expire.
 	 * @param file Information of a file
 	 */
-	abstract downloadLink(file: FileLocation | string): string;
+	abstract downloadLink(file: FileLocation | string, name?: string): string;
 
 	/**
 	 * Will return one upload link for simple (<16MiB)
@@ -111,8 +111,16 @@ export class S3Driver extends Storage {
 		return objects.contents.map((v) => v.key);
 	}
 
-	downloadLink(file: string): string {
-		return this.s3.presign(file);
+	downloadLink(file: string, name?: string): string {
+        let contentDisposition = "attachment";
+
+        if (name) {
+            contentDisposition += `; filename="${name}"`;
+        }
+
+		return this.s3.presign(file, {
+            contentDisposition
+        });
 	}
 
 	async uploadLink(file: UploadInfo): Promise<UploadInstructions> {

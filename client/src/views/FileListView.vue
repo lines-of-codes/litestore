@@ -156,41 +156,51 @@ async function handleDownloadButton(filePath: string) {
             <i class="bi bi-plus-lg text-lg"></i>
         </button>
     </div>
-    <div id="createMenuDropdown" class="z-10 hidden w-24 rounded dark:bg-slate-700 border border-theme -translate-x-4"
+    <div id="createMenuDropdown"
+        class="z-10 hidden w-30 rounded bg-white dark:bg-slate-700 border border-theme -translate-x-4"
         ref="create-menu">
-        <div class="flex flex-col">
+        <div class="flex flex-col" role="list">
+            <button class="dropdown-menu-btn" @click="handleUploadButton">
+                <i class="bi bi-upload" role="img" aria-label="Upload icon"></i>
+                Upload
+            </button>
             <button class="dropdown-menu-btn" @click="handleNewFolderButton">
-                <i class="bi bi-folder"></i>
+                <i class="bi bi-folder" role="img" aria-label="Folder icon"></i>
                 Folder
             </button>
-            <button class="dropdown-menu-btn" @click="handleUploadButton">
-                <i class="bi bi-upload"></i>
-                Upload
+            <button class="dropdown-menu-btn">
+                <i class="bi bi-markdown" role="img" aria-label="Markdown icon"></i>
+                Markdown
             </button>
         </div>
     </div>
     <CreateFolderDialog ref="new-folder-dialog" :refresh-file-list="fetchFileListCurrent" />
-    <main class="m-4 p-2 bg-theme-soft">
-        <div v-show="errMsg" class="px-2">
-            <h1 class="text-2xl">Error!</h1>
-            <p>{{ errMsg }}</p>
-        </div>
-        <div v-show="errMsg === '' && files.length === 0">No files in directory.</div>
-        <ul>
-            <li v-for="file in files" class="flex justify-between items-center file-entry">
-                <RouterLink :to="`/files${file.virtual_path}`" class="px-2">
-                    <i :class="getFileIcon(file)"></i>
-                    {{ file.filename }}
-                </RouterLink>
-                <div class="actions px-2">
-                    <button class="icon-btn" v-show="!file.is_folder" aria-label="Download"><i class="bi bi-download"
-                            @click="handleDownloadButton(file.virtual_path)"></i></button>
-                    <button class="icon-btn" aria-label="Trash" @click="() => handleDeleteButton(file.virtual_path)"><i
-                            class="bi bi-trash"></i></button>
-                </div>
-            </li>
-        </ul>
-    </main>
+    <div class="m-4 flex gap-4">
+        <main class="p-2 bg-theme-soft rounded flex-1">
+            <div v-show="errMsg" class="px-2">
+                <h1 class="text-2xl">Error!</h1>
+                <p>{{ errMsg }}</p>
+            </div>
+            <div v-show="errMsg === '' && files.length === 0">No files in directory.</div>
+            <ul>
+                <li v-for="file in files" class="flex justify-between items-center file-entry">
+                    <RouterLink :to="`/files${file.is_folder ? '' : '/view'}${file.virtual_path}`" class="px-2">
+                        <i :class="getFileIcon(file)"></i>
+                        {{ file.filename }}
+                    </RouterLink>
+                    <div class="actions px-2">
+                        <button class="icon-btn" v-show="!file.is_folder" aria-label="Download"><i
+                                class="bi bi-download" @click="handleDownloadButton(file.virtual_path)"></i></button>
+                        <button class="icon-btn" aria-label="Trash"
+                            @click="() => handleDeleteButton(file.virtual_path)"><i class="bi bi-trash"></i></button>
+                    </div>
+                </li>
+            </ul>
+        </main>
+        <!-- <div class="bg-theme-soft rounded py-2 px-4">
+            <h1>Sharing</h1>
+        </div> -->
+    </div>
     <div id="ongoingActions"
         class="fixed bottom-6 bg-theme-soft left-[50%] translate-x-[-50%] py-2 px-4 rounded border-theme border"
         ref="ongoing-actions" v-show="ongoingActions.length > 0">

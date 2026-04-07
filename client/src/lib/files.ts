@@ -127,3 +127,25 @@ export async function downloadFile(path: string) {
 
     window.open(jsonData.url, "_blank")?.focus();
 }
+
+export async function getDownloadUrl(path: string): Promise<{
+    url: string;
+    filename: string;
+}> {
+    const resp = await fetch(
+        `${import.meta.env.VITE_LS_API}/api/files/download/${path}`,
+        {
+            headers: authHeader(),
+        },
+    );
+
+    const jsonData = await resp.json();
+
+    if (!resp.ok) {
+        throw Error(`ERR ${resp.status}: ${jsonData.message}`);
+    }
+
+    const {url, filename} = jsonData;
+
+    return {url, filename};
+}
