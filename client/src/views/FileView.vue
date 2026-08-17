@@ -39,6 +39,12 @@ async function fetchFile(filePath: string) {
         contentType.value = type;
     }
 
+    if (filePath.endsWith(".pdf")) {
+        contentType.value = "application/pdf";
+        objectUrl.value = URL.createObjectURL(await resp.blob());
+        return;
+    }
+
     if (type === null || type.startsWith("text/")) {
         objectText.value = await resp.text();
         let extensions = [basicSetup];
@@ -95,6 +101,9 @@ onUnmounted(() => {
         <div v-if="objectText === '' && objectUrl === ''">Loading...</div>
         <div v-if="contentType.startsWith('image/')" class="p-2 bg-theme-soft">
             <img :alt="`${fileName}`" :src="objectUrl" class="max-h-[84vh]" />
+        </div>
+        <div v-if="contentType === 'application/pdf'">
+            <iframe :src="objectUrl" class="min-h-[84vh] w-full"></iframe>
         </div>
     </main>
 </template>

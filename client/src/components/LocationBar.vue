@@ -10,10 +10,14 @@ interface FolderEntry {
 const props = defineProps(["filename"]);
 const route = useRoute();
 const sections = ref([] as FolderEntry[]);
-let path = route.params.path;
+let path = route.path.substring(7).split("/");
 
-if (typeof (path) === "string") {
-    path = path.split("/");
+if (route.params.path) {
+    if (typeof route.params.path === "string") {
+        path = route.params.path.split("/");
+    } else {
+        path = route.params.path;
+    }
 }
 
 function generateSegments(pathSegments: string[]) {

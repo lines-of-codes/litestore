@@ -17,11 +17,9 @@ interface OngoingAction {
 const route = useRoute();
 const errMsg = ref("");
 
-let path = route.params.path;
+let path = route.path.substring(7).split("/");
 
-if (path instanceof Array) {
-    path = path.join("/");
-}
+console.log(route.params);
 
 const createMenuBtn = useTemplateRef("create-menu-btn");
 const createMenuElement = useTemplateRef("create-menu");
@@ -47,11 +45,7 @@ async function fetchFileList(targetPath: string) {
 }
 
 function fetchFileListCurrent() {
-    if (path instanceof Array) {
-        path = path.join("/");
-    }
-
-    return fetchFileList(path);
+    return fetchFileList(path.join("/"));
 }
 
 watch(
@@ -59,13 +53,13 @@ watch(
     async (newPath, oldPath) => {
         errMsg.value = "";
 
-        if (newPath instanceof Array) {
-            newPath = newPath.join("/");
+        if (typeof newPath === "string") {
+            newPath = newPath.substring(7).split("/");
         }
 
         path = newPath;
 
-        await fetchFileList(newPath);
+        await fetchFileList(path.join("/"));
     }
 );
 
@@ -120,7 +114,7 @@ function handleUploadButton() {
                 name: `Uploading ${file.name}`,
                 indeterminate: true
             }) - 1;
-            uploadFile(`${path as string}${file.name}`, file).then(async () => {
+            uploadFile(`${path.join("/")}${file.name}`, file).then(async () => {
                 ongoingActions.value.splice(newIndex, 1);
                 await fetchFileListCurrent();
             }, (err) => {

@@ -36,13 +36,15 @@ async function handleSubmit() {
     <main class="min-h-screen flex flex-col justify-center items-center gap-2">
         <h1 class="text-3xl">Sign up</h1>
         <form class="flex flex-col gap-2" @submit.prevent="handleSubmit">
-            <input type="email" name="email" id="email" class="text-input" placeholder="Email" v-model="email" required>
+            <input type="email" name="email" id="email" class="text-input" 
+                placeholder="Email" v-model="email" autocomplete="email" required>
             <input type="text" name="username" id="username" class="text-input" placeholder="Username"
-                v-model="username" required>
+                v-model="username" autocomplete="username" required>
             <input type="password" name="password" id="password" class="text-input" placeholder="Password"
-                v-model="password" required>
+                v-model="password" autocomplete="new-password" required>
             <input type="password" name="password" id="passwordConfirm" class="text-input"
-                placeholder="Password Confirmation" v-model="passwordConfirm" required>
+                placeholder="Password Confirmation" v-model="passwordConfirm" 
+                autocomplete="new-password" required>
             <input type="submit" value="Sign up" class="btn">
         </form>
         <p>

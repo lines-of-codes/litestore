@@ -27,7 +27,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-    <main class="min-h-[100vh] flex flex-col justify-center items-center gap-2">
+    <main class="min-h-screen flex flex-col justify-center items-center gap-2">
         <h1 class="text-3xl">Log in</h1>
         <form class="flex flex-col gap-2" @submit.prevent="handleSubmit">
             <input type="text" name="username" id="username" class="text-input" placeholder="Username"

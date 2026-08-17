@@ -16,7 +16,7 @@ but is also harder to self-host due to having multiple components.
 To host litestore, you must have the following:
 
 - a web server (lighttpd, apache http, nginx, etc.)
-- an S3-compatible object storage (AWS S3, Google Cloud Storage, MinIO, Garage, etc.)
+- [Garage](https://garagehq.deuxfleurs.fr/) S3 object storage or similar
 - PostgreSQL 18\*
 
 \*Should be compatible with older PostgreSQL versions that are still supported, but it isn't recommended
