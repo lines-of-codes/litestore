@@ -1,6 +1,5 @@
 ---
 import { getCollection } from "astro:content";
-import Badge from "./Badge.astro";
 
 let currentUrl = Astro.url.pathname.substring(20);
 
@@ -8,14 +7,12 @@ if (currentUrl.endsWith("/")) {
 	currentUrl = currentUrl.substring(0, currentUrl.length - 1);
 }
 
-const apiDocs = await getCollection("apiDocs");
+const docs = await getCollection("docs");
 
-const routeList = apiDocs
+const routeList = docs
 	.map((doc) => ({
 		id: doc.id === "index" ? "" : doc.id,
-		method: doc.data.method,
 		title: doc.data.title,
-		summary: doc.data.summary,
 	}))
 	.sort((a, b) => a.id.toLowerCase().localeCompare(b.id.toLowerCase()));
 ---
@@ -29,14 +26,16 @@ const routeList = apiDocs
 	});
 </script>
 
-<nav x-show="showApiRoutes">
+<nav x-show="showSidebar">
 	<header>
-		<a href="/litestore/docs/" class="cleanlink"
-			>&larr; Back to documentation</a
-		>
 		<a href="/litestore/" class="cleanlink"><h1>litestore</h1></a>
 	</header>
 	<ul id="routeList">
+		<li>
+			<a href="/litestore/docs/api/" class="cleanlink">
+				API Documentation
+			</a>
+		</li>
 		{
 			routeList.map((data) => (
 				<li>
@@ -47,14 +46,6 @@ const routeList = apiDocs
 						]}
 						href={`/litestore/docs/api/${data.id}`}
 					>
-						{data.method === undefined ? null : (
-							<Badge
-								variant={(data.method as string).toLowerCase()}
-							>
-								{data.method}
-							</Badge>
-						)}
-            {" "}
 						<span>{data.title}</span>
 					</a>
 				</li>

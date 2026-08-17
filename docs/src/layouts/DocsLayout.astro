@@ -1,0 +1,76 @@
+---
+import DocsSidebar from "@/components/DocsSidebar.astro";
+import "@/styles/generic.css";
+import "@/styles/inter.css";
+
+const { data } = Astro.props;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/litestore/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="color-scheme" content="dark" />
+		<meta name="description" content={data.description} />
+		<title>{data.title} - litestore API</title>
+	</head>
+	<body>
+		<div
+			class="main-container"
+			x-data="{ showSidebar: true }"
+			x-init="showSidebar = !matchMedia('(max-width: 600px)').matches"
+			@resize.throttle.window="showSidebar = !matchMedia('(max-width: 600px)').matches"
+		>
+			<nav id="mobileNav">
+				<button class="btn" @click="showSidebar = !showSidebar">
+					&vellip;
+				</button>
+			</nav>
+			<DocsSidebar />
+			<main>
+				<slot />
+			</main>
+		</div>
+	</body>
+</html>
+
+<style>
+	.main-container {
+		padding: 32px;
+		display: grid;
+		grid-template-columns: 1fr 3fr;
+		gap: 1em;
+	}
+
+	#mobileNav {
+		display: none;
+	}
+
+	@media screen and (max-width: 600px) {
+		.main-container {
+			display: block;
+		}
+
+		#mobileNav {
+			display: block;
+			position: fixed;
+			right: 32px;
+		}
+	}
+
+	html,
+	body {
+		width: 100%;
+		min-height: 100vh;
+	}
+
+	body {
+		margin: 0;
+		background: linear-gradient(to top right, #101020, #202030) no-repeat;
+		background-size: cover;
+		color: #e0e0e0;
+		font-family: InterVariable, sans-serif;
+	}
+</style>
