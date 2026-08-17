@@ -1,7 +1,7 @@
-import type { z } from "../../node_modules/zod/lib/external";
+import { z } from "zod";
 
 export const signUpInfo = z.object({
-    email: z.string().email(),
+    email: z.email(),
     username: z.string(),
     password: z.string(),
 });

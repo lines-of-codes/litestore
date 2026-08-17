@@ -4,16 +4,16 @@ import { z } from "zod";
 import { storage } from "../storage";
 import { verifyAuth } from "./auth";
 import {
-	wrongMethod,
-	unauthenticated,
-	malformedJson,
-	requireBodyFields,
-	internalServerError,
-	notFound,
-	bodyRequired,
-	ok,
-	forbidden,
-	invalidUrlParameter,
+    wrongMethod,
+    unauthenticated,
+    malformedJson,
+    requireBodyFields,
+    internalServerError,
+    notFound,
+    bodyRequired,
+    ok,
+    forbidden,
+    invalidUrlParameter,
 } from "./responses";
 import * as path from "node:path";
 import { corsAllowOrigin, corsPreflightAuthRoute } from "../util/cors";
@@ -21,307 +21,301 @@ import { corsAllowOrigin, corsPreflightAuthRoute } from "../util/cors";
 const logger = getLogger("litestore");
 
 const createLinkRequest = z.object({
-	path: z.string(),
-	expiresAt: z.string().datetime({ offset: true }).optional(),
-	password: z.string().optional(),
-	downloadLimit: z.number().optional(),
+    path: z.string(),
+    expiresAt: z.iso.datetime({ offset: true }).optional(),
+    password: z.string().optional(),
+    downloadLimit: z.number().optional(),
 });
 
 const editLinkRequest = z.object({
-	expiresAt: z.string().datetime({ offset: true }).optional(),
-	password: z.string().optional(),
-	downloadLimit: z.number().optional(),
+    expiresAt: z.iso.datetime({ offset: true }).optional(),
+    password: z.string().optional(),
+    downloadLimit: z.number().optional(),
 });
 
 const downloadLinkRequest = z.object({
-	password: z.string().optional(),
+    password: z.string().optional(),
 });
 
 const shareIdValidation = z.string().uuid();
 
 export async function createFileLinkRoute(req: BunRequest): Promise<Response> {
-	if (req.method !== "POST") return wrongMethod("POST");
+    if (req.method !== "POST") return wrongMethod("POST");
 
-	const payload = await verifyAuth(req);
-	if (payload === null) return unauthenticated();
+    const payload = await verifyAuth(req);
+    if (payload === null) return unauthenticated();
 
-	const uid = payload.uid as undefined | number;
-	if (uid === undefined) return unauthenticated();
+    const uid = payload.uid as undefined | number;
+    if (uid === undefined) return unauthenticated();
 
-	let jsonObj: any = {};
+    let jsonObj: any = {};
 
-	try {
-		jsonObj = await req.json();
-	} catch {
-		return malformedJson();
-	}
+    try {
+        jsonObj = await req.json();
+    } catch {
+        return malformedJson();
+    }
 
-	const parsedData = await createLinkRequest.safeParseAsync(jsonObj);
+    const parsedData = await createLinkRequest.safeParseAsync(jsonObj);
 
-	if (!parsedData.success) return requireBodyFields(parsedData.error.issues);
+    if (!parsedData.success) return requireBodyFields(parsedData.error.issues);
 
-	let password = null;
+    let password = null;
 
-	if (parsedData.data.password !== undefined) {
-		password = await Bun.password.hash(parsedData.data.password, {
-			algorithm: "argon2id",
-			memoryCost: 19456,
-			timeCost: 2,
-		});
-	}
+    if (parsedData.data.password !== undefined) {
+        password = await Bun.password.hash(parsedData.data.password, {
+            algorithm: "argon2id",
+            memoryCost: 19456,
+            timeCost: 2,
+        });
+    }
 
-	const data = {
-		id_files: path.parse(parsedData.data.path).name,
-		created_by: uid,
-		expires_at: parsedData.data.expiresAt,
-		password,
-		download_limit: parsedData.data.downloadLimit,
-	};
+    const data = {
+        id_files: path.parse(parsedData.data.path).name,
+        created_by: uid,
+        expires_at: parsedData.data.expiresAt,
+        password,
+        download_limit: parsedData.data.downloadLimit,
+    };
 
-	try {
-		const [newLink] = await sql`
+    try {
+        const [newLink] = await sql`
 			INSERT INTO file_links ${sql(data)}
 			RETURNING id
 		`;
 
-		return Response.json(
-			{
-				status: 201,
-				dog: "https://http.dog/201",
-				uuid: newLink.id,
-			},
-			{
-				status: 201,
-			}
-		);
-	} catch (err) {
-		if (err instanceof Error)
-			logger.error(err.toString());
-		else
-			console.error(err);
-		return internalServerError(
-			"An error occurred while creating the file link"
-		);
-	}
+        return Response.json(
+            {
+                status: 201,
+                dog: "https://http.dog/201",
+                uuid: newLink.id,
+            },
+            {
+                status: 201,
+            },
+        );
+    } catch (err) {
+        if (err instanceof Error) logger.error(err);
+        else console.error(err);
+        return internalServerError(
+            "An error occurred while creating the file link",
+        );
+    }
 }
 
 export async function getFileLinkInfoRoute(shareId: string): Promise<Response> {
-	const result = await sql`
+    const result = await sql`
 		SELECT f.filename, f.trashed, fl.password, fl.download_count
 		FROM file_links as fl, files as f
 		WHERE fl.id = ${shareId} AND fl.id_files = f.id
 		LIMIT 1;
 	`;
 
-	if (result instanceof Array && result.length === 0) {
-		return notFound();
-	}
+    if (result instanceof Array && result.length === 0) {
+        return notFound();
+    }
 
-	const [{ filename, trashed, password, download_count }] = result;
+    const [{ filename, trashed, password, download_count }] = result;
 
-	if (trashed) return notFound();
+    if (trashed) return notFound();
 
-	return Response.json(
-		{
-			status: 200,
-			dog: "https://http.dog/200",
-			filename,
-			passwordProtected: password != null,
-			downloadCount: download_count,
-		},
-		{
-			headers: corsAllowOrigin,
-		}
-	);
+    return Response.json(
+        {
+            status: 200,
+            dog: "https://http.dog/200",
+            filename,
+            passwordProtected: password != null,
+            downloadCount: download_count,
+        },
+        {
+            headers: corsAllowOrigin,
+        },
+    );
 }
 
 export async function patchFileLinkInfoRoute(
-	req: BunRequest<"/api/files/link/:shareId">
+    req: BunRequest<"/api/files/link/:shareId">,
 ): Promise<Response> {
-	if (req.body === null) return bodyRequired();
+    if (req.body === null) return bodyRequired();
 
-	const payload = await verifyAuth(req);
-	if (payload === null) return unauthenticated();
+    const payload = await verifyAuth(req);
+    if (payload === null) return unauthenticated();
 
-	const uid = payload.uid as undefined | number;
-	if (uid === undefined) return unauthenticated();
+    const uid = payload.uid as undefined | number;
+    if (uid === undefined) return unauthenticated();
 
-	let jsonObj: any = {};
+    let jsonObj: any = {};
 
-	try {
-		jsonObj = await req.json();
-	} catch {
-		return malformedJson();
-	}
+    try {
+        jsonObj = await req.json();
+    } catch {
+        return malformedJson();
+    }
 
-	const parsedData = await editLinkRequest.safeParseAsync(jsonObj);
+    const parsedData = await editLinkRequest.safeParseAsync(jsonObj);
 
-	if (!parsedData.success) return requireBodyFields(parsedData.error.issues);
+    if (!parsedData.success) return requireBodyFields(parsedData.error.issues);
 
-	let password = undefined;
+    let password = undefined;
 
-	if (parsedData.data.password !== undefined) {
-		password = await Bun.password.hash(parsedData.data.password, {
-			algorithm: "argon2id",
-			memoryCost: 19456,
-			timeCost: 2,
-		});
-	}
+    if (parsedData.data.password !== undefined) {
+        password = await Bun.password.hash(parsedData.data.password, {
+            algorithm: "argon2id",
+            memoryCost: 19456,
+            timeCost: 2,
+        });
+    }
 
-	const data = {
-		expires_at: parsedData.data.expiresAt,
-		password,
-		download_limit: parsedData.data.downloadLimit,
-	};
+    const data = {
+        expires_at: parsedData.data.expiresAt,
+        password,
+        download_limit: parsedData.data.downloadLimit,
+    };
 
-	try {
-		await sql`UPDATE file_links SET ${data} WHERE id = ${req.params.shareId} AND created_by = ${uid}`;
-	} catch (err) {
-		if (err instanceof Error)
-			logger.error(err.toString());
-		else
-			console.error(err);
-		return internalServerError(
-			"An error occurred while updating link settings"
-		);
-	}
+    try {
+        await sql`UPDATE file_links SET ${data} WHERE id = ${req.params.shareId} AND created_by = ${uid}`;
+    } catch (err) {
+        if (err instanceof Error) logger.error(err);
+        else console.error(err);
+        return internalServerError(
+            "An error occurred while updating link settings",
+        );
+    }
 
-	return ok();
+    return ok();
 }
 
 export async function deleteFileLinkInfoRoute(
-	req: BunRequest<"/api/files/link/:shareId">
+    req: BunRequest<"/api/files/link/:shareId">,
 ): Promise<Response> {
-	const payload = await verifyAuth(req);
-	if (payload === null) return unauthenticated();
+    const payload = await verifyAuth(req);
+    if (payload === null) return unauthenticated();
 
-	const uid = payload.uid as undefined | number;
-	if (uid === undefined) return unauthenticated();
+    const uid = payload.uid as undefined | number;
+    if (uid === undefined) return unauthenticated();
 
-	const shareId = req.params.shareId;
+    const shareId = req.params.shareId;
 
-	const result = await sql`
+    const result = await sql`
 		SELECT created_by FROM file_links
 		WHERE id = ${shareId} LIMIT 1;
 	`;
 
-	if (result instanceof Array && result.length === 0) {
-		return notFound();
-	}
+    if (result instanceof Array && result.length === 0) {
+        return notFound();
+    }
 
-	try {
-		await sql`DELETE FROM file_links WHERE id = ${shareId}`;
-	} catch (err) {
-		if (err instanceof Error)
-			logger.error(err.toString());
-		else
-			console.error(err);
-		return internalServerError(
-			"An error occurred while deleting the file link"
-		);
-	}
+    try {
+        await sql`DELETE FROM file_links WHERE id = ${shareId}`;
+    } catch (err) {
+        if (err instanceof Error) logger.error(err);
+        else console.error(err);
+        return internalServerError(
+            "An error occurred while deleting the file link",
+        );
+    }
 
-	return ok();
+    return ok();
 }
 
 export async function fileLinkInfoRoute(
-	req: BunRequest<"/api/files/link/:shareId">
+    req: BunRequest<"/api/files/link/:shareId">,
 ): Promise<Response> {
-	const idValidation = shareIdValidation.safeParse(req.params.shareId);
+    const idValidation = shareIdValidation.safeParse(req.params.shareId);
 
-	if (!idValidation.success)
-		return invalidUrlParameter(idValidation.error.issues);
+    if (!idValidation.success)
+        return invalidUrlParameter(idValidation.error.issues);
 
-	switch (req.method) {
-		case "GET":
-			return await getFileLinkInfoRoute(idValidation.data);
-		case "PATCH":
-			return await patchFileLinkInfoRoute(req);
-		case "DELETE":
-			return await deleteFileLinkInfoRoute(req);
-		case "OPTIONS":
-			return corsPreflightAuthRoute("OPTIONS, GET, PATCH, DELETE");
-		default:
-			return wrongMethod("OPTIONS, GET, PATCH, DELETE");
-	}
+    switch (req.method) {
+        case "GET":
+            return await getFileLinkInfoRoute(idValidation.data);
+        case "PATCH":
+            return await patchFileLinkInfoRoute(req);
+        case "DELETE":
+            return await deleteFileLinkInfoRoute(req);
+        case "OPTIONS":
+            return corsPreflightAuthRoute("OPTIONS, GET, PATCH, DELETE");
+        default:
+            return wrongMethod("OPTIONS, GET, PATCH, DELETE");
+    }
 }
 
 export async function downloadPublicFileRoute(
-	req: BunRequest<"/api/files/link/:shareId/download">
+    req: BunRequest<"/api/files/link/:shareId/download">,
 ): Promise<Response> {
-	if (req.method !== "GET") return wrongMethod("GET");
+    if (req.method !== "GET") return wrongMethod("GET");
 
-	const idValidation = shareIdValidation.safeParse(req.params.shareId);
+    const idValidation = shareIdValidation.safeParse(req.params.shareId);
 
-	if (!idValidation.success)
-		return invalidUrlParameter(idValidation.error.issues);
+    if (!idValidation.success)
+        return invalidUrlParameter(idValidation.error.issues);
 
-	const shareId = idValidation.data;
+    const shareId = idValidation.data;
 
-	const parsedData = await downloadLinkRequest.safeParseAsync(
-		req.body === null ? "" : await req.json()
-	);
+    const parsedData = await downloadLinkRequest.safeParseAsync(
+        req.body === null ? "" : await req.json(),
+    );
 
-	const result = await sql`
+    const result = await sql`
 		SELECT f.filename, f.s3_path, f.trashed, fl.password, fl.download_limit, fl.download_count
 		FROM file_links as fl, files as f
 		WHERE fl.id = ${shareId} AND fl.id_files = f.id
 		LIMIT 1;
 	`;
 
-	if (result instanceof Array && result.length === 0) {
-		return notFound();
-	}
+    if (result instanceof Array && result.length === 0) {
+        return notFound();
+    }
 
-	const [fileLink] = result;
+    const [fileLink] = result;
 
-	if (fileLink.trashed) {
-		return notFound();
-	}
+    if (fileLink.trashed) {
+        return notFound();
+    }
 
-	if (
-		fileLink.download_limit != null &&
-		fileLink.download_count >= fileLink.download_limit
-	) {
-		return forbidden();
-	}
+    if (
+        fileLink.download_limit != null &&
+        fileLink.download_count >= fileLink.download_limit
+    ) {
+        return forbidden();
+    }
 
-	if (fileLink.password !== null) {
-		if (!parsedData.success)
-			return requireBodyFields(parsedData.error.issues);
+    if (fileLink.password !== null) {
+        if (!parsedData.success)
+            return requireBodyFields(parsedData.error.issues);
 
-		if (parsedData.data.password === undefined) return forbidden();
+        if (parsedData.data.password === undefined) return forbidden();
 
-		const passwordCorrect = await Bun.password.verify(
-			parsedData.data.password,
-			fileLink.password
-		);
+        const passwordCorrect = await Bun.password.verify(
+            parsedData.data.password,
+            fileLink.password,
+        );
 
-		if (!passwordCorrect) return forbidden();
-	}
+        if (!passwordCorrect) return forbidden();
+    }
 
-	if (fileLink.download_count + 1 >= fileLink.download_count) {
-		await sql`
+    if (fileLink.download_count + 1 >= fileLink.download_count) {
+        await sql`
 			DELETE FROM file_links WHERE id = ${shareId};
 		`;
-	} else {
-		await sql`
+    } else {
+        await sql`
 			UPDATE file_links SET download_count = ${fileLink.download_count + 1}
 			WHERE id = ${shareId};
 		`;
-	}
+    }
 
-	const url = storage.downloadLink(fileLink.s3_path);
+    const url = storage.downloadLink(fileLink.s3_path);
 
-	return Response.json(
-		{
-			name: fileLink.filename,
-			status: 200,
-			dog: "https://http.dog/200",
-			url,
-		},
-		{
-			headers: corsAllowOrigin,
-		}
-	);
+    return Response.json(
+        {
+            name: fileLink.filename,
+            status: 200,
+            dog: "https://http.dog/200",
+            url,
+        },
+        {
+            headers: corsAllowOrigin,
+        },
+    );
 }

@@ -155,7 +155,7 @@ export async function downloadRoute(req: BunRequest): Promise<Response> {
         [{filename}] = result;
     } catch (err) {
         if (err instanceof Error)
-            logger.error(err.toString());
+            logger.error(err);
         else
             console.error(err);
         return internalServerError(
@@ -238,7 +238,7 @@ export async function deleteRoute(req: BunRequest): Promise<Response> {
 		deletionTargets.push(id);
 	} catch (err) {
 		if (err instanceof Error)
-			logger.error(err.toString());
+			logger.error(err);
 		else
 			console.error(err);
 		return internalServerError(
@@ -252,19 +252,25 @@ export async function deleteRoute(req: BunRequest): Promise<Response> {
 		)} RETURNING s3_path`;
 
 		const stateIndex = addToProcessingQueue(async (stateIndex) => {
-			for (const path in s3_paths) {
-				await storage.deleteFile({
-					owner: uid,
-					path,
-				});
-			}
-			processingState[stateIndex] = true;
+            try {
+                for (const path in s3_paths) {
+                    await storage.deleteFile({
+                        owner: uid,
+                        path,
+                    });
+                }
+                processingState[stateIndex] = true;
+            } catch(err) {
+                if (err instanceof Error)
+                    logger.error(err);
+                console.trace(err);
+            }
 		}, false);
 
 		return acceptedIntoQueue(stateIndex);
 	} catch (err) {
 		if (err instanceof Error)
-			logger.error(err.toString());
+			logger.error(err);
 		else
 			console.error(err);
 		return internalServerError("An error occurred while deleting the file");
@@ -297,7 +303,7 @@ export async function trashRoute(req: BunRequest): Promise<Response> {
 		await sql`UPDATE files SET trashed = ${parsedData.data.trash} WHERE virtual_path = ${fp}`;
 	} catch (err) {
 		if (err instanceof Error)
-			logger.error(err.toString());
+			logger.error(err);
 		else
 			console.error(err);
 		return internalServerError(
@@ -369,7 +375,7 @@ export async function listFilesRoute(
 		);
 	} catch (err) {
 		if (err instanceof Error)
-			logger.error(err.toString());
+			logger.error(err);
 		else
 			console.error(err);
 		return internalServerError(
@@ -424,7 +430,7 @@ export async function moveFileRoute(req: BunRequest): Promise<Response> {
 		await database.move(sourceFile, id, targetFolder);
 	} catch (err) {
 		if (err instanceof Error)
-			logger.error(err.toString());
+			logger.error(err);
 		else
 			console.error(err);
 		return internalServerError(
@@ -470,7 +476,7 @@ export async function copyFileRoute(req: BunRequest): Promise<Response> {
 		[originalFile] = result;
 	} catch (err) {
 		if (err instanceof Error)
-			logger.error(err.toString());
+			logger.error(err);
 		else
 			console.error(err);
 		return internalServerError(
@@ -493,7 +499,7 @@ export async function copyFileRoute(req: BunRequest): Promise<Response> {
 		[targetFolder] = result;
 	} catch (err) {
 		if (err instanceof Error)
-			logger.error(err.toString());
+			logger.error(err);
 		else
 			console.error(err);
 		return internalServerError(
@@ -507,7 +513,7 @@ export async function copyFileRoute(req: BunRequest): Promise<Response> {
 		newFile = await database.copy(originalFile, targetFolder, uid);
 	} catch (err) {
 		if (err instanceof Error)
-			logger.error(err.toString());
+			logger.error(err);
 		else
 			console.error(err);
 		return internalServerError(
@@ -578,7 +584,7 @@ export async function createFolderRoute(req: BunRequest): Promise<Response> {
         `;
 	} catch (err) {
 		if (err instanceof Error)
-			logger.error(err.toString());
+			logger.error(err);
 		else
 			console.error(err);
 		return internalServerError(

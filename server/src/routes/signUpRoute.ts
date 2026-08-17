@@ -5,8 +5,11 @@ import type { NewFileInfo } from "../db";
 import { storage } from "../storage";
 import { corsAllowOrigin } from "../util/cors";
 import { signUpInfo, logger } from "./auth";
-import { wrongMethod, requireBodyFields, internalServerError } from "./responses";
-
+import {
+    wrongMethod,
+    requireBodyFields,
+    internalServerError,
+} from "./responses";
 
 export async function signUpRoute(req: BunRequest): Promise<Response> {
     if (req.method !== "POST") return wrongMethod("OPTIONS, POST");
@@ -15,7 +18,7 @@ export async function signUpRoute(req: BunRequest): Promise<Response> {
     const parsed = await signUpInfo.safeParseAsync(rawData);
 
     if (!parsed.success) {
-        return requireBodyFields(parsed.error.errors);
+        return requireBodyFields(parsed.error.issues);
     }
 
     try {
@@ -31,20 +34,18 @@ export async function signUpRoute(req: BunRequest): Promise<Response> {
                 {
                     status: 400,
                     dog: "https://http.dog/400",
-                    message: "An account with the same username or email already exists",
+                    message:
+                        "An account with the same username or email already exists",
                 },
                 {
                     status: 400,
                     headers: corsAllowOrigin,
-                }
+                },
             );
         }
     } catch (err) {
-        if (err instanceof Error)
-            logger.error(err.toString());
-
-        else
-            console.error(err);
+        if (err instanceof Error) logger.error(err);
+        else console.error(err);
     }
 
     const data = {
@@ -76,11 +77,8 @@ export async function signUpRoute(req: BunRequest): Promise<Response> {
 
         await sql`INSERT INTO files ${sql(rootFile)}`;
     } catch (err) {
-        if (err instanceof Error)
-            logger.error(err.toString());
-
-        else
-            console.error(err);
+        if (err instanceof Error) logger.error(err);
+        else console.error(err);
         return internalServerError("An error occurred while updating database");
     }
 
@@ -91,7 +89,7 @@ export async function signUpRoute(req: BunRequest): Promise<Response> {
         });
     } catch (err) {
         if (err instanceof Error) {
-            logger.error(err.toString());
+            logger.error(err);
         } else {
             console.error(err);
         }
@@ -105,6 +103,6 @@ export async function signUpRoute(req: BunRequest): Promise<Response> {
         {
             status: 201,
             headers: corsAllowOrigin,
-        }
+        },
     );
 }

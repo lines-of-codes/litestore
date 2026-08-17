@@ -75,7 +75,7 @@ const server = Bun.serve({
         return notFound();
     },
     error(error) {
-        logger.error(error.toString());
+        logger.error(error);
         return internalServerError("An unhandled and unknown error occurred.");
     },
 });

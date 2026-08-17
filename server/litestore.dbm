@@ -3,9 +3,9 @@
 CAUTION: Do not modify this file unless you know what you are doing.
  Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="1.2.0" use-changelog="false" max-obj-count="4"
+<dbmodel pgmodeler-ver="1.2.3" use-changelog="false" max-obj-count="4"
 	 gen-disabled-objs-code="false" show-sys-schemas-rects="true"
-	 last-position="40,24" last-zoom="0.95" scene-rect="0,-81.8,1570.8,1158.6"
+	 last-position="244,41" last-zoom="0.95" scene-rect="0,-81.8,1570.8,1158.6"
 	 default-schema="public" default-owner="postgres"
 	 layers="Default layer"
 	 active-layers="0"
@@ -64,7 +64,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	</constraint>
 </table>
 
-<table name="files" layers="0" collapse-mode="2" max-obj-count="12" z-value="0">
+<table name="files" layers="0" collapse-mode="2" max-obj-count="13" z-value="0">
 	<schema name="public"/>
 	<role name="litestore"/>
 	<position x="1000" y="160"/>
@@ -95,6 +95,9 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	</column>
 	<column name="virtual_path" not-null="true" default-value="''">
 		<type name="varchar" length="1024"/>
+	</column>
+	<column name="sha256">
+		<type name="varchar" length="64"/>
 	</column>
 	<constraint name="files_pk" type="pk-constr" table="public.files">
 		<columns names="id" ref-type="src-columns"/>
@@ -167,6 +170,14 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 src-required="false" dst-required="false"
 	del-action="CASCADE"/>
 
+<usertype name="event_type" configuration="enumeration">
+	<schema name="public"/>
+	<role name="litestore"/>
+	<enumeration label="move"/>
+	<enumeration label="copy"/>
+	<enumeration label="public_share"/>
+</usertype>
+
 <constraint name="parent_fk" type="fk-constr" comparison-type="MATCH SIMPLE"
 	 upd-action="NO ACTION" del-action="CASCADE" ref-table="public.files" table="public.files">
 	<columns names="parent_folder" ref-type="src-columns"/>
@@ -184,7 +195,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 dst-table="public.files" reference-fk="parent_fk"
 	 src-required="false" dst-required="false">
 	<line>
-		<position x="1303.96" y="274.575"/>
+		<position x="1303.96" y="282.108"/>
 	<position x="1303.96" y="127"/>
 	<position x="1180.64" y="127"/>
 	</line>

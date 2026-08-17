@@ -84,7 +84,7 @@ export class S3Driver extends Storage {
 			secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
 			region: process.env.S3_REGION,
 			endpoint: process.env.S3_ENDPOINT,
-			bucket: process.env.S3_BUCKET,
+			bucket: process.env.S3_BUCKET
 		});
 		this.s3_aws = new S3Client({
 			endpoint: process.env.S3_ENDPOINT,

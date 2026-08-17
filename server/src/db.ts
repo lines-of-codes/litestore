@@ -12,6 +12,7 @@ export interface NewFileInfo {
 	 */
 	id_users: number;
 	parent_folder?: number;
+    sha256?: string;
 }
 
 export interface FileInfo {
